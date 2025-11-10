@@ -1,0 +1,740 @@
+<!-- templates/edit_profile.html - NEON PRO EDGE THEME -->
+{% extends "base.html" %}
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Left Navigation -->
+        <div class="col-md-3 mb-4">
+            <div class="card glass-card">
+                <div class="card-body">
+                    <nav class="nav flex-column">
+                        <a class="nav-link active glass-card p-3 mb-2" href="#basic-info">
+                            <i class="fas fa-user me-2"></i>Basic Information
+                        </a>
+                        <a class="nav-link glass-card p-3 mb-2" href="#profile-mode">
+                            <i class="fas fa-exchange-alt me-2"></i>Profile Mode
+                        </a>
+                        <a class="nav-link glass-card p-3 mb-2" href="#professional">
+                            <i class="fas fa-briefcase me-2"></i>Professional Details
+                        </a>
+                        <a class="nav-link glass-card p-3 mb-2" href="#skills">
+                            <i class="fas fa-code me-2"></i>Skills
+                        </a>
+                        <a class="nav-link glass-card p-3 mb-2" href="#services">
+                            <i class="fas fa-cog me-2"></i>Services
+                        </a>
+                        <a class="nav-link glass-card p-3 mb-2" href="#learning-goals">
+                            <i class="fas fa-bullseye me-2"></i>Learning Goals
+                        </a>
+                        <a class="nav-link glass-card p-3 mb-2" href="#portfolio">
+                            <i class="fas fa-folder me-2"></i>Portfolio
+                        </a>
+                        <a class="nav-link glass-card p-3 mb-2" href="#experience">
+                            <i class="fas fa-history me-2"></i>Experience
+                        </a>
+                        <a class="nav-link glass-card p-3 mb-2" href="#education">
+                            <i class="fas fa-graduation-cap me-2"></i>Education
+                        </a>
+                        <a class="nav-link glass-card p-3" href="#security">
+                            <i class="fas fa-shield-alt me-2"></i>Security
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="card glass-card">
+                <div class="card-header">
+                    <h4 class="mb-0 text-gradient">Edit Profile</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('update_profile') }}" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        
+                        <!-- Basic Information -->
+                        <div id="basic-info">
+                            <h5 class="mb-3 text-gradient">Basic Information</h5>
+                            
+                            <!-- Cover Photo -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Cover Photo</label>
+                                <div class="mb-3 glass-card" style="height: 150px; background: {% if user.cover_photo %}url('{{ url_for('static', filename=user.cover_photo) }}'){% else %}var(--gradient-primary){% endif %}; background-size: cover; background-position: center; border-radius: var(--border-radius);">
+                                </div>
+                                <input type="file" class="form-control" name="cover_photo" accept="image/*">
+                                <div class="form-text">Recommended size: 1200x300 pixels</div>
+                            </div>
+                            
+                            <!-- Avatar -->
+                            <div class="mb-4 text-center">
+                                <label class="form-label fw-bold">Profile Picture</label>
+                                <div class="mb-3">
+                                    <img src="{{ url_for('static', filename=user.avatar) }}" 
+                                         alt="Avatar" class="avatar-lg rounded-circle mb-2 border border-3 border-light">
+                                </div>
+                                <input type="file" class="form-control" name="avatar" accept="image/*">
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="username" class="form-label fw-bold">Username *</label>
+                                        <input type="text" class="form-control" id="username" name="username" 
+                                               value="{{ user.username }}" required pattern="[A-Za-z0-9_.]{3,30}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="name" class="form-label fw-bold">Full Name</label>
+                                        <input type="text" class="form-control" id="name" name="name" 
+                                               value="{{ user.name or '' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="location" class="form-label fw-bold">Location</label>
+                                        <input type="text" class="form-control" id="location" name="location" 
+                                               value="{{ user.location or '' }}" placeholder="City, Country">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="website" class="form-label fw-bold">Website</label>
+                                        <input type="url" class="form-control" id="website" name="website" 
+                                               value="{{ user.website or '' }}" placeholder="https://...">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Profile Mode -->
+                        <div id="profile-mode">
+                            <h5 class="mb-3 text-gradient">Profile Mode</h5>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="card mode-card glass-card h-100">
+                                        <div class="card-body text-center">
+                                            <div class="feature-icon mx-auto mb-3">
+                                                <i class="fas fa-chalkboard-teacher"></i>
+                                            </div>
+                                            <h6 class="text-gradient">Teacher Mode</h6>
+                                            <p class="small text-muted">Offer your skills and expertise as services</p>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="profile_mode" id="mode-teacher" value="teacher" {{ 'checked' if user.profile_mode.value == 'teacher' }}>
+                                                <label class="form-check-label fw-bold" for="mode-teacher">
+                                                    I want to teach
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card mode-card glass-card h-100">
+                                        <div class="card-body text-center">
+                                            <div class="feature-icon mx-auto mb-3">
+                                                <i class="fas fa-graduation-cap"></i>
+                                            </div>
+                                            <h6 class="text-gradient">Learner Mode</h6>
+                                            <p class="small text-muted">Find teachers and share learning goals</p>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="profile_mode" id="mode-learner" value="learner" {{ 'checked' if user.profile_mode.value == 'learner' }}>
+                                                <label class="form-check-label fw-bold" for="mode-learner">
+                                                    I want to learn
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card mode-card glass-card h-100">
+                                        <div class="card-body text-center">
+                                            <div class="feature-icon mx-auto mb-3">
+                                                <i class="fas fa-exchange-alt"></i>
+                                            </div>
+                                            <h6 class="text-gradient">Both Modes</h6>
+                                            <p class="small text-muted">Teach and learn simultaneously</p>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="profile_mode" id="mode-both" value="both" {{ 'checked' if user.profile_mode.value == 'both' or not user.profile_mode }}>
+                                                <label class="form-check-label fw-bold" for="mode-both">
+                                                    I want to do both
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+                        
+                        <!-- Professional Details -->
+                        <div id="professional">
+                            <h5 class="mb-3 text-gradient">Professional Details</h5>
+                            
+                            <div class="mb-3">
+                                <label for="headline" class="form-label fw-bold">Professional Headline</label>
+                                <input type="text" class="form-control" id="headline" name="headline" 
+                                       value="{{ user.headline or '' }}" placeholder="e.g., Software Engineer | Full Stack Developer">
+                                <div class="form-text">A brief description that appears below your name</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="summary" class="form-label fw-bold">Professional Summary</label>
+                                <textarea class="form-control" id="summary" name="summary" rows="4" 
+                                          placeholder="Tell others about your professional background, skills, and interests...">{{ user.summary or '' }}</textarea>
+                                <div class="form-text">Max 1000 characters</div>
+                            </div>
+                            
+                            <!-- Teacher-specific fields -->
+                            <div id="teacher-fields" class="mb-3" style="display: {% if user.profile_mode.value in ['teacher', 'both'] %}block{% else %}none{% endif %};">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="hourly_rate" class="form-label fw-bold">Hourly Rate (USD)</label>
+                                            <input type="number" class="form-control" id="hourly_rate" name="hourly_rate" 
+                                                   value="{{ user.hourly_rate or '' }}" step="0.01" min="0" placeholder="50.00">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="response_time" class="form-label fw-bold">Average Response Time</label>
+                                            <input type="text" class="form-control" id="response_time" name="response_time" 
+                                                   value="{{ user.response_time or '' }}" placeholder="e.g., 2 hours, 1 day">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="open_to_work" name="open_to_work" 
+                                               {{ 'checked' if user.open_to_work }}>
+                                        <label class="form-check-label fw-bold" for="open_to_work">
+                                            Open to Work
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="open_to_freelance" name="open_to_freelance" 
+                                               {{ 'checked' if user.open_to_freelance }}>
+                                        <label class="form-check-label fw-bold" for="open_to_freelance">
+                                            Open to Freelance
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Skills Section -->
+                        <div id="skills">
+                            <h5 class="mb-3 text-gradient">Skills & Expertise</h5>
+                            <div id="skills-container">
+                                {% for user_skill in user.skills %}
+                                <div class="skill-item mb-3 p-3 glass-card rounded">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <input type="text" class="form-control" name="skill_names[]" value="{{ user_skill.skill.name }}" placeholder="Skill name" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <select class="form-control" name="skill_proficiencies[]" required>
+                                                <option value="beginner" {{ 'selected' if user_skill.proficiency == 'beginner' }}>Beginner</option>
+                                                <option value="intermediate" {{ 'selected' if user_skill.proficiency == 'intermediate' }}>Intermediate</option>
+                                                <option value="advanced" {{ 'selected' if user_skill.proficiency == 'advanced' }}>Advanced</option>
+                                                <option value="expert" {{ 'selected' if user_skill.proficiency == 'expert' }}>Expert</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input type="number" class="form-control" name="skill_years[]" value="{{ user_skill.years_experience or '' }}" placeholder="Years" min="0" max="50">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="button" class="btn btn-danger btn-sm remove-skill">
+                                                <i class="fas fa-trash me-1"></i>Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <button type="button" class="btn btn-outline-primary" id="add-skill">
+                                <i class="fas fa-plus me-1"></i>Add Skill
+                            </button>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Services Section -->
+                        <div id="services">
+                            <h5 class="mb-3 text-gradient">Services</h5>
+                            <p class="text-muted">Add services you can offer as a teacher</p>
+                            <div id="services-container">
+                                {% for service in user.services %}
+                                <div class="service-item mb-4 p-3 glass-card rounded">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Service Title</label>
+                                                <input type="text" class="form-control" name="service_titles[]" value="{{ service.title }}" placeholder="e.g., Python Programming Tutoring" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Category</label>
+                                                <input type="text" class="form-control" name="service_categories[]" value="{{ service.category or '' }}" placeholder="e.g., Programming, Design">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Description</label>
+                                        <textarea class="form-control" name="service_descriptions[]" rows="3" placeholder="Describe what you offer...">{{ service.description or '' }}</textarea>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Price Type</label>
+                                                <select class="form-control" name="service_price_types[]" required>
+                                                    <option value="hourly" {{ 'selected' if service.price_type.value == 'hourly' }}>Hourly</option>
+                                                    <option value="fixed" {{ 'selected' if service.price_type.value == 'fixed' }}>Fixed</option>
+                                                    <option value="free" {{ 'selected' if service.price_type.value == 'free' }}>Free</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Price Amount (USD)</label>
+                                                <input type="number" class="form-control" name="service_prices[]" value="{{ service.price_amount or '' }}" step="0.01" min="0" placeholder="50.00">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Duration</label>
+                                                <input type="text" class="form-control" name="service_durations[]" value="{{ service.duration or '' }}" placeholder="e.g., 1 hour, 30 minutes">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Tags</label>
+                                        <input type="text" class="form-control" name="service_tags[]" value="{{ service.tags or '' }}" placeholder="python, programming, coding (comma separated)">
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" name="service_active[]" {{ 'checked' if service.is_active }}>
+                                        <label class="form-check-label fw-bold">Active Service</label>
+                                    </div>
+                                    <button type="button" class="btn btn-danger btn-sm remove-service">
+                                        <i class="fas fa-trash me-1"></i>Remove Service
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <button type="button" class="btn btn-outline-primary" id="add-service">
+                                <i class="fas fa-plus me-1"></i>Add Service
+                            </button>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Learning Goals Section -->
+                        <div id="learning-goals">
+                            <h5 class="mb-3 text-gradient">Learning Goals</h5>
+                            <p class="text-muted">Add what you want to learn and find teachers</p>
+                            <div id="goals-container">
+                                {% for goal in user.learning_goals %}
+                                <div class="goal-item mb-4 p-3 glass-card rounded">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Goal Title</label>
+                                                <input type="text" class="form-control" name="goal_titles[]" value="{{ goal.title }}" placeholder="e.g., Learn Python for Data Science" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Status</label>
+                                                <select class="form-control" name="goal_statuses[]" required>
+                                                    <option value="active" {{ 'selected' if goal.status == 'active' }}>Active</option>
+                                                    <option value="completed" {{ 'selected' if goal.status == 'completed' }}>Completed</option>
+                                                    <option value="cancelled" {{ 'selected' if goal.status == 'cancelled' }}>Cancelled</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Description</label>
+                                        <textarea class="form-control" name="goal_descriptions[]" rows="3" placeholder="Describe what you want to learn...">{{ goal.description or '' }}</textarea>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Min Budget (USD)</label>
+                                                <input type="number" class="form-control" name="goal_budget_mins[]" value="{{ goal.budget_min or '' }}" step="0.01" min="0" placeholder="20.00">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Max Budget (USD)</label>
+                                                <input type="number" class="form-control" name="goal_budget_maxs[]" value="{{ goal.budget_max or '' }}" step="0.01" min="0" placeholder="100.00">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Timeline</label>
+                                                <input type="text" class="form-control" name="goal_timelines[]" value="{{ goal.timeline or '' }}" placeholder="e.g., 1 month, 3 months">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Preferred Format</label>
+                                        <select class="form-control" name="goal_formats[]">
+                                            <option value="">Any format</option>
+                                            <option value="one-on-one" {{ 'selected' if goal.preferred_format == 'one-on-one' }}>One-on-One</option>
+                                            <option value="group" {{ 'selected' if goal.preferred_format == 'group' }}>Group</option>
+                                            <option value="online" {{ 'selected' if goal.preferred_format == 'online' }}>Online</option>
+                                            <option value="in-person" {{ 'selected' if goal.preferred_format == 'in-person' }}>In-Person</option>
+                                        </select>
+                                    </div>
+                                    <button type="button" class="btn btn-danger btn-sm remove-goal">
+                                        <i class="fas fa-trash me-1"></i>Remove Goal
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <button type="button" class="btn btn-outline-primary" id="add-goal">
+                                <i class="fas fa-plus me-1"></i>Add Learning Goal
+                            </button>
+                        </div>
+
+                        <hr class="my-4">
+                        
+                        <!-- Portfolio Link -->
+                        <div id="portfolio">
+                            <h5 class="mb-3 text-gradient">Portfolio</h5>
+                            <div class="card glass-card">
+                                <div class="card-body text-center">
+                                    <div class="feature-icon mx-auto mb-3">
+                                        <i class="fas fa-folder-open"></i>
+                                    </div>
+                                    <h6 class="text-gradient">Portfolio Items</h6>
+                                    <p class="text-muted small">Showcase your projects and work</p>
+                                    <a href="{{ url_for('manage_portfolio') }}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-cog me-1"></i>Manage Portfolio
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Experience & Education Links -->
+                        <div id="experience-education">
+                            <h5 class="mb-3 text-gradient">Experience & Education</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card glass-card h-100">
+                                        <div class="card-body text-center">
+                                            <div class="feature-icon mx-auto mb-3">
+                                                <i class="fas fa-briefcase"></i>
+                                            </div>
+                                            <h6 class="text-gradient">Work Experience</h6>
+                                            <p class="text-muted small">Add your professional experience</p>
+                                            <a href="{{ url_for('manage_experience') }}" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-cog me-1"></i>Manage Experience
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card glass-card h-100">
+                                        <div class="card-body text-center">
+                                            <div class="feature-icon mx-auto mb-3">
+                                                <i class="fas fa-graduation-cap"></i>
+                                            </div>
+                                            <h6 class="text-gradient">Education</h6>
+                                            <p class="text-muted small">Add your educational background</p>
+                                            <a href="{{ url_for('manage_education') }}" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-cog me-1"></i>Manage Education
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Security -->
+                        <div id="security">
+                            <h5 class="mb-3 text-gradient">Change Password</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="current_password" class="form-label fw-bold">Current Password</label>
+                                        <input type="password" class="form-control" id="current_password" 
+                                               name="current_password" placeholder="Leave blank to keep current">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="new_password" class="form-label fw-bold">New Password</label>
+                                        <input type="password" class="form-control" id="new_password" 
+                                               name="new_password" placeholder="Leave blank to keep current">
+                                        <div class="form-text">At least 8 characters</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{{ url_for('profile', username=user.username) }}" 
+                               class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Smooth scroll for navigation
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href').substring(1);
+            document.getElementById(targetId).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+
+    // Show/hide teacher fields based on profile mode
+    document.querySelectorAll('input[name="profile_mode"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const teacherFields = document.getElementById('teacher-fields');
+            if (this.value === 'teacher' || this.value === 'both') {
+                teacherFields.style.display = 'block';
+            } else {
+                teacherFields.style.display = 'none';
+            }
+        });
+    });
+
+    // Add skill functionality
+    document.getElementById('add-skill').addEventListener('click', function() {
+        const container = document.getElementById('skills-container');
+        const newSkill = document.createElement('div');
+        newSkill.className = 'skill-item mb-3 p-3 glass-card rounded';
+        newSkill.innerHTML = `
+            <div class="row">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" name="skill_names[]" placeholder="Skill name" required>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-control" name="skill_proficiencies[]" required>
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                        <option value="expert">Expert</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="number" class="form-control" name="skill_years[]" placeholder="Years" min="0" max="50">
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-danger btn-sm remove-skill">
+                        <i class="fas fa-trash me-1"></i>Remove
+                    </button>
+                </div>
+            </div>
+        `;
+        container.appendChild(newSkill);
+    });
+
+    // Remove skill
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-skill')) {
+            e.target.closest('.skill-item').remove();
+        }
+    });
+
+    // Add service functionality
+    document.getElementById('add-service').addEventListener('click', function() {
+        const container = document.getElementById('services-container');
+        const newService = document.createElement('div');
+        newService.className = 'service-item mb-4 p-3 glass-card rounded';
+        newService.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Service Title</label>
+                        <input type="text" class="form-control" name="service_titles[]" placeholder="e.g., Python Programming Tutoring" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Category</label>
+                        <input type="text" class="form-control" name="service_categories[]" placeholder="e.g., Programming, Design">
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Description</label>
+                <textarea class="form-control" name="service_descriptions[]" rows="3" placeholder="Describe what you offer..."></textarea>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Price Type</label>
+                        <select class="form-control" name="service_price_types[]" required>
+                            <option value="hourly">Hourly</option>
+                            <option value="fixed">Fixed</option>
+                            <option value="free">Free</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Price Amount (USD)</label>
+                        <input type="number" class="form-control" name="service_prices[]" step="0.01" min="0" placeholder="50.00">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Duration</label>
+                        <input type="text" class="form-control" name="service_durations[]" placeholder="e.g., 1 hour, 30 minutes">
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Tags</label>
+                <input type="text" class="form-control" name="service_tags[]" placeholder="python, programming, coding (comma separated)">
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" name="service_active[]" checked>
+                <label class="form-check-label fw-bold">Active Service</label>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm remove-service">
+                <i class="fas fa-trash me-1"></i>Remove Service
+            </button>
+        `;
+        container.appendChild(newService);
+    });
+
+    // Remove service
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-service')) {
+            e.target.closest('.service-item').remove();
+        }
+    });
+
+    // Add goal functionality
+    document.getElementById('add-goal').addEventListener('click', function() {
+        const container = document.getElementById('goals-container');
+        const newGoal = document.createElement('div');
+        newGoal.className = 'goal-item mb-4 p-3 glass-card rounded';
+        newGoal.innerHTML = `
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Goal Title</label>
+                        <input type="text" class="form-control" name="goal_titles[]" placeholder="e.g., Learn Python for Data Science" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Status</label>
+                        <select class="form-control" name="goal_statuses[]" required>
+                            <option value="active">Active</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Description</label>
+                <textarea class="form-control" name="goal_descriptions[]" rows="3" placeholder="Describe what you want to learn..."></textarea>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Min Budget (USD)</label>
+                        <input type="number" class="form-control" name="goal_budget_mins[]" step="0.01" min="0" placeholder="20.00">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Max Budget (USD)</label>
+                        <input type="number" class="form-control" name="goal_budget_maxs[]" step="0.01" min="0" placeholder="100.00">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Timeline</label>
+                        <input type="text" class="form-control" name="goal_timelines[]" placeholder="e.g., 1 month, 3 months">
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Preferred Format</label>
+                <select class="form-control" name="goal_formats[]">
+                    <option value="">Any format</option>
+                    <option value="one-on-one">One-on-One</option>
+                    <option value="group">Group</option>
+                    <option value="online">Online</option>
+                    <option value="in-person">In-Person</option>
+                </select>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm remove-goal">
+                <i class="fas fa-trash me-1"></i>Remove Goal
+            </button>
+        `;
+        container.appendChild(newGoal);
+    });
+
+    // Remove goal
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-goal')) {
+            e.target.closest('.goal-item').remove();
+        }
+    });
+});
+</script>
+
+<style>
+.mode-card {
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.mode-card:hover {
+    transform: translateY(-5px);
+}
+
+.mode-card .form-check-input {
+    margin-top: 0.5rem;
+}
+
+.skill-item, .service-item, .goal-item {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+}
+</style>
+{% endblock %}

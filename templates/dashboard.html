@@ -1,0 +1,396 @@
+<!-- templates/dashboard.html - NEON PRO EDGE THEME -->
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Left Sidebar -->
+        <div class="col-md-3 col-lg-2 d-none d-md-block sidebar-glass">
+            <div class="position-sticky pt-4">
+                <div class="text-center mb-4">
+                    {% set avatar_path = (current_user.avatar if current_user and current_user.avatar else 'avatars/guest_default.png') %}
+                    <img src="{{ url_for('static', filename=avatar_path) }}" 
+                         alt="Avatar" class="avatar-lg rounded-circle mb-3 border border-3 border-light">
+                    <h6 class="fw-bold">{{ current_user.name if current_user and current_user.name else (current_user.username if current_user else 'Guest') }}</h6>
+                    {% if current_user and current_user.username %}
+                    <small class="text-muted">@{{ current_user.username }}</small>
+                    {% endif %}
+                </div>
+                
+                <ul class="nav flex-column">
+                    <li class="nav-item mb-2">
+                        <a class="nav-link active glass-card p-3" href="{{ url_for('dashboard') }}">
+                            <i class="fas fa-home me-2"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link glass-card p-3" href="{{ url_for('search') }}">
+                            <i class="fas fa-search me-2"></i> Search
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link glass-card p-3" href="{{ url_for('notifications') }}" id="notifications-link">
+                            <i class="fas fa-bell me-2"></i> Notifications
+                            <span class="badge bg-neon ms-1 d-none" id="notification-badge">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        {% if current_user and current_user.username %}
+                        <a class="nav-link glass-card p-3" href="{{ url_for('profile', username=current_user.username) }}">
+                            <i class="fas fa-user me-2"></i> Profile
+                        </a>
+                        {% else %}
+                        <a class="nav-link glass-card p-3" href="{{ url_for('explore') }}">
+                            <i class="fas fa-user me-2"></i> Profile
+                        </a>
+                        {% endif %}
+                    </li>
+                    {% if not is_guest %}
+                    <li class="nav-item">
+                        <a class="nav-link glass-card p-3" href="{{ url_for('edit_profile') }}">
+                            <i class="fas fa-cog me-2"></i> Settings
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-6 px-md-4 main-content">
+            <!-- Create Post Card - Only for logged-in users -->
+            {% if not is_guest %}
+            <div class="card mb-4 glass-card">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('create_post') }}" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <textarea class="form-control mb-3" name="content" rows="3" 
+                                  placeholder="Share your professional insights..."></textarea>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <input type="file" name="media" id="media-upload" class="d-none" accept="image/*,video/*">
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('media-upload').click()">
+                                    <i class="fas fa-image me-1"></i> Media
+                                </button>
+                                <small class="text-muted ms-2" id="file-name"></small>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-1"></i> Post
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Feed -->
+            {% for post in posts %}
+            <div class="card mb-4 post-card glass-card" id="post-{{ post.id }}">
+                <div class="card-body">
+                    <!-- Post Header -->
+                    <div class="d-flex align-items-center mb-3">
+                        {% set post_user_avatar = (post.user.avatar if post.user and post.user.avatar else 'avatars/guest_default.png') %}
+                        <img src="{{ url_for('static', filename=post_user_avatar) }}" 
+                             alt="Avatar" class="avatar-sm rounded-circle me-3">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 fw-bold">{{ post.user.name if post.user and post.user.name else post.user.username }}</h6>
+                            <small class="text-muted">@{{ post.user.username }} • {{ post.created_at.strftime('%b %d, %Y') }}</small>
+                        </div>
+                        <a href="{{ url_for('profile', username=post.user.username) }}" class="btn btn-outline-primary btn-sm">
+                            View Profile
+                        </a>
+                    </div>
+
+                    <!-- Post Content -->
+                    {% if post.content %}
+                    <p class="card-text mb-3">{{ post.content }}</p>
+                    {% endif %}
+
+                    <!-- Post Media -->
+                    {% if post.media_path %}
+                    <div class="post-media mb-3">
+                        {% if post.media_path.endswith(('.mp4', '.mov', '.webm')) %}
+                        <video src="{{ url_for('static', filename=post.media_path) }}" 
+                               class="img-fluid rounded" controls>
+                        </video>
+                        {% else %}
+                        <img src="{{ url_for('static', filename=post.media_path) }}" 
+                             class="img-fluid rounded" alt="Post media">
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Post Actions -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            {% if not is_guest %}
+                            <button class="btn btn-sm btn-outline-danger like-btn" data-post="{{ post.id }}">
+                                <i class="fas fa-heart"></i> 
+                                <span class="like-count">{{ post.likes|length }}</span>
+                            </button>
+                            {% else %}
+                            <button class="btn btn-sm btn-outline-danger" disabled>
+                                <i class="fas fa-heart"></i> 
+                                <span class="like-count">{{ post.likes|length }}</span>
+                            </button>
+                            {% endif %}
+                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" 
+                                    data-bs-target="#comments-{{ post.id }}">
+                                <i class="fas fa-comment"></i> {{ post.comments|length }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Comments Section -->
+                    <div class="collapse mt-3" id="comments-{{ post.id }}">
+                        <div class="comments-section">
+                            {% for comment in post.comments %}
+                            <div class="d-flex mb-2">
+                                {% set comment_user_avatar = (comment.user.avatar if comment.user and comment.user.avatar else 'avatars/guest_default.png') %}
+                                <img src="{{ url_for('static', filename=comment_user_avatar) }}" 
+                                     alt="Avatar" class="avatar-xs rounded-circle me-2">
+                                <div class="flex-grow-1">
+                                    <strong>{{ comment.user.username }}</strong>
+                                    <span class="ms-2">{{ comment.content }}</span>
+                                    <br>
+                                    <small class="text-muted">{{ comment.created_at.strftime('%b %d') }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            
+                            <!-- Add Comment Form -->
+                            {% if not is_guest %}
+                            <form method="POST" action="{{ url_for('comment_post', post_id=post.id) }}" class="mt-2">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <div class="input-group">
+                                    <input type="text" name="comment" class="form-control" placeholder="Write a comment...">
+                                    <button class="btn btn-primary" type="submit">Post</button>
+                                </div>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card text-center py-5 glass-card">
+                <div class="card-body">
+                    <div class="feature-icon mx-auto mb-3">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h5 class="text-gradient">Welcome to SwapSavvy!</h5>
+                    <p class="text-muted">
+                        {% if is_guest %}
+                        Start by exploring posts from our community.
+                        {% else %}
+                        Start by creating your first post or following other users.
+                        {% endif %}
+                    </p>
+                    <a href="{{ url_for('explore') }}" class="btn btn-primary">
+                        {% if is_guest %}Explore Community{% else %}Find People to Follow{% endif %}
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </main>
+
+        <!-- Right Sidebar -->
+        <div class="col-md-3 col-lg-4 d-none d-lg-block">
+            <div class="position-sticky pt-4">
+                <!-- Suggestions - Only for logged-in users -->
+                {% if not is_guest and suggestions %}
+                <div class="card glass-card">
+                    <div class="card-header">
+                        <h6 class="mb-0 text-gradient">Who to Follow</h6>
+                    </div>
+                    <div class="card-body">
+                        {% for suggested_user in suggestions %}
+                        <div class="d-flex align-items-center mb-3">
+                            {% set suggested_avatar = (suggested_user.avatar if suggested_user and suggested_user.avatar else 'avatars/guest_default.png') %}
+                            <img src="{{ url_for('static', filename=suggested_avatar) }}" 
+                                 alt="Avatar" class="avatar-sm rounded-circle me-2">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0 fw-bold">{{ suggested_user.name if suggested_user and suggested_user.name else suggested_user.username }}</h6>
+                                <small class="text-muted">@{{ suggested_user.username }}</small>
+                            </div>
+                            <button class="btn btn-primary btn-sm follow-btn" data-user="{{ suggested_user.id }}">
+                                Follow
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Quick Stats - Only for logged-in users -->
+                {% if not is_guest %}
+                <div class="card mt-3 glass-card">
+                    <div class="card-body">
+                        <h6 class="text-gradient">Your Stats</h6>
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <strong class="text-gradient">{{ posts_count }}</strong>
+                                <div class="text-muted small">Posts</div>
+                            </div>
+                            <div class="col-4">
+                                <strong class="text-gradient">{{ followers_count }}</strong>
+                                <div class="text-muted small">Followers</div>
+                            </div>
+                            <div class="col-4">
+                                <strong class="text-gradient">{{ following_count }}</strong>
+                                <div class="text-muted small">Following</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Guest Info -->
+                {% if is_guest %}
+                <div class="card glass-card">
+                    <div class="card-body">
+                        <h6 class="text-gradient">Guest Mode</h6>
+                        <p class="small text-muted">You're browsing as a guest. Some features are limited.</p>
+                        <a href="{{ url_for('signup') }}" class="btn btn-primary btn-sm w-100">Sign Up</a>
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-sm w-100 mt-2">Log In</a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // File upload display
+    const mediaUpload = document.getElementById('media-upload');
+    if (mediaUpload) {
+        mediaUpload.addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || '';
+            document.getElementById('file-name').textContent = fileName;
+        });
+    }
+
+    // Like functionality
+    document.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const postId = this.dataset.post;
+            const likeCount = this.querySelector('.like-count');
+            
+            try {
+                const response = await fetch(`/post/${postId}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                
+                likeCount.textContent = data.likes_count;
+                
+                if (data.action === 'liked') {
+                    this.classList.remove('btn-outline-danger');
+                    this.classList.add('btn-danger');
+                } else {
+                    this.classList.remove('btn-danger');
+                    this.classList.add('btn-outline-danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    });
+
+    // Follow functionality
+    document.querySelectorAll('.follow-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const userId = this.dataset.user;
+            const originalText = this.textContent;
+            
+            try {
+                const response = await fetch(`/user/${userId}/follow`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                
+                this.textContent = data.action === 'followed' ? 'Unfollow' : 'Follow';
+            } catch (error) {
+                console.error('Error:', error);
+                this.textContent = originalText;
+            }
+        });
+    });
+
+    // Update notification count
+    async function updateNotificationCount() {
+        try {
+            const response = await fetch('/api/notifications/count');
+            const data = await response.json();
+            const badge = document.getElementById('notification-badge');
+            
+            if (data.count > 0) {
+                badge.textContent = data.count;
+                badge.classList.remove('d-none');
+            } else {
+                badge.classList.add('d-none');
+            }
+        } catch (error) {
+            console.error('Error fetching notification count:', error);
+        }
+    }
+
+    // Update every 30 seconds (only for logged-in users)
+    {% if not is_guest %}
+    updateNotificationCount();
+    setInterval(updateNotificationCount, 30000);
+    {% endif %}
+});
+</script>
+
+<style>
+.sidebar-glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-right: 1px solid var(--glass-border);
+    min-height: 100vh;
+}
+
+.sidebar-glass .nav-link {
+    border-radius: var(--border-radius-sm);
+    transition: var(--transition);
+}
+
+.sidebar-glass .nav-link:hover {
+    background: var(--glass-bg);
+    transform: translateX(5px);
+}
+
+.sidebar-glass .nav-link.active {
+    background: var(--gradient-primary);
+    color: white;
+}
+</style>
+{% endblock %}

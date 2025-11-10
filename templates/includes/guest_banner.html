@@ -1,0 +1,51 @@
+<!-- templates/includes/guest_banner.html -->
+<div class="guest-banner">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <i class="fas fa-user-clock me-2"></i>
+                <strong>You're browsing as Guest</strong> - 
+                <a href="{{ url_for('upgrade_from_guest') }}" class="text-white text-decoration-underline ms-1">
+                    Create account
+                </a> 
+                to interact and access all features
+            </div>
+            <div class="col-md-4 text-end">
+                <small class="me-3">
+                    <i class="fas fa-clock me-1"></i>
+                    Session expires: 
+                    <span id="guestTimer">{{ session.get('guest_expiry') }}</span>
+                </small>
+                <a href="{{ url_for('end_guest_session') }}" class="btn btn-sm btn-outline-light">
+                    <i class="fas fa-sign-out-alt me-1"></i>End Session
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Guest session timer
+document.addEventListener('DOMContentLoaded', function() {
+    const timerElement = document.getElementById('guestTimer');
+    if (timerElement) {
+        function updateTimer() {
+            const expiryTime = new Date('{{ session.get("guest_expiry") }}');
+            const now = new Date();
+            const timeLeft = expiryTime - now;
+            
+            if (timeLeft <= 0) {
+                timerElement.textContent = 'Expired';
+                window.location.reload();
+            } else {
+                const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                timerElement.textContent = `${hours}h ${minutes}m`;
+            }
+        }
+        
+        updateTimer();
+        setInterval(updateTimer, 60000); // Update every minute
+    }
+});
+</script>

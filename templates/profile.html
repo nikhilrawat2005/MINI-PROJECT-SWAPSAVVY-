@@ -1,0 +1,665 @@
+<!-- templates/profile.html - NEON PRO EDGE THEME -->
+{% extends "base.html" %}
+{% block title %}{{ user.username }}'s Profile{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Cover Photo & Basic Info -->
+    <div class="card mb-4 glass-card">
+        <div class="card-header position-relative" style="height: 200px; background: {% if user.cover_photo %}url({{ url_for('static', filename=user.cover_photo) }}){% else %}var(--gradient-primary){% endif %}; background-size: cover; background-position: center;">
+            {% if is_owner %}
+            <a href="{{ url_for('edit_profile') }}" class="btn btn-light btn-sm position-absolute top-0 end-0 m-3 glass-card">
+                <i class="fas fa-camera me-1"></i> Edit Cover
+            </a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 text-center">
+                    <img src="{{ url_for('static', filename=user.avatar) }}" 
+                         alt="Avatar" class="avatar-profile rounded-circle mb-3 border border-4 border-light" 
+                         style="margin-top: -80px;">
+                    
+                    {% if not is_owner %}
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary follow-btn" data-user="{{ user.id }}">
+                            {% if is_following %}Unfollow{% else %}Follow{% endif %}
+                        </button>
+                        {% if not is_connected %}
+                        <button class="btn btn-outline-primary connect-btn" data-user="{{ user.id }}">
+                            Connect
+                        </button>
+                        {% else %}
+                        <button class="btn btn-success glass-card" disabled>
+                            <i class="fas fa-check me-1"></i> Connected
+                        </button>
+                        {% endif %}
+                        <button class="btn btn-outline-secondary message-btn" data-user="{{ user.id }}">
+                            <i class="fas fa-envelope me-1"></i> Message
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-9">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h2 class="mb-1 fw-bold">{{ user.name or user.username }}</h2>
+                            <p class="text-muted mb-2">@{{ user.username }}</p>
+                            
+                            {% if user.headline %}
+                            <h5 class="text-gradient mb-3">{{ user.headline }}</h5>
+                            {% endif %}
+                            
+                            <!-- Profile Mode Badges -->
+                            <div class="mb-3">
+                                {% if user.profile_mode.value == 'teacher' %}
+                                <span class="badge bg-danger me-2 glass-card">
+                                    <i class="fas fa-chalkboard-teacher me-1"></i>Teacher
+                                </span>
+                                {% elif user.profile_mode.value == 'learner' %}
+                                <span class="badge bg-success me-2 glass-card">
+                                    <i class="fas fa-graduation-cap me-1"></i>Learner
+                                </span>
+                                {% else %}
+                                <span class="badge bg-warning me-2 glass-card">
+                                    <i class="fas fa-exchange-alt me-1"></i>Both
+                                </span>
+                                {% endif %}
+                                
+                                {% if user.open_to_work %}
+                                <span class="badge bg-info me-2 glass-card">Open to Work</span>
+                                {% endif %}
+                                {% if user.open_to_freelance %}
+                                <span class="badge bg-secondary glass-card">Open to Freelance</span>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Rating Stats -->
+                            {% set rating_stats = user.get_rating_stats() %}
+                            {% if rating_stats.count > 0 %}
+                            <div class="mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="rating-stars me-2">
+                                        {% for i in range(1, 6) %}
+                                        <i class="fas fa-star {% if i <= rating_stats.average %}text-warning{% else %}text-muted{% endif %}"></i>
+                                        {% endfor %}
+                                    </div>
+                                    <span class="text-muted">({{ rating_stats.count }} reviews)</span>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if user.location %}
+                            <p class="mb-2"><i class="fas fa-map-marker-alt text-primary me-2"></i>{{ user.location }}</p>
+                            {% endif %}
+                            
+                            {% if user.website %}
+                            <p class="mb-3"><i class="fas fa-globe text-primary me-2"></i>
+                                <a href="{{ user.website }}" target="_blank" class="text-gradient">{{ user.website }}</a>
+                            </p>
+                            {% endif %}
+                            
+                            {% if user.summary %}
+                            <div class="mb-4">
+                                <h6 class="text-gradient">About</h6>
+                                <p class="text-muted">{{ user.summary }}</p>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="d-flex gap-4 text-center">
+                                <div class="glass-card p-3 rounded">
+                                    <strong class="text-gradient">{{ posts|length }}</strong>
+                                    <div class="text-muted small">Posts</div>
+                                </div>
+                                <div class="glass-card p-3 rounded">
+                                    <strong class="text-gradient">{{ user.followers.count() }}</strong>
+                                    <div class="text-muted small">Followers</div>
+                                </div>
+                                <div class="glass-card p-3 rounded">
+                                    <strong class="text-gradient">{{ user.following.count() }}</strong>
+                                    <div class="text-muted small">Following</div>
+                                </div>
+                                <div class="glass-card p-3 rounded">
+                                    <strong class="text-gradient">{{ user.connections.count() }}</strong>
+                                    <div class="text-muted small">Connections</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if is_owner %}
+                        <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">
+                            <i class="fas fa-edit me-1"></i> Edit Profile
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Mode Navigation -->
+    <div class="card mb-4 glass-card">
+        <div class="card-body p-0">
+            <ul class="nav nav-pills nav-fill" id="profileTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="posts-tab" data-bs-toggle="tab" data-bs-target="#posts" type="button" role="tab">
+                        <i class="fas fa-stream me-2"></i>Posts
+                    </button>
+                </li>
+                {% if user.profile_mode.value in ['teacher', 'both'] %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="services-tab" data-bs-toggle="tab" data-bs-target="#services" type="button" role="tab">
+                        <i class="fas fa-briefcase me-2"></i>Services
+                    </button>
+                </li>
+                {% endif %}
+                {% if user.profile_mode.value in ['learner', 'both'] %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="goals-tab" data-bs-toggle="tab" data-bs-target="#goals" type="button" role="tab">
+                        <i class="fas fa-bullseye me-2"></i>Learning Goals
+                    </button>
+                </li>
+                {% endif %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="skills-tab" data-bs-toggle="tab" data-bs-target="#skills" type="button" role="tab">
+                        <i class="fas fa-code me-2"></i>Skills
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="portfolio-tab" data-bs-toggle="tab" data-bs-target="#portfolio" type="button" role="tab">
+                        <i class="fas fa-folder me-2"></i>Portfolio
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="tab-content" id="profileTabContent">
+        <!-- Posts Tab -->
+        <div class="tab-pane fade show active" id="posts" role="tabpanel">
+            {% for post in posts %}
+            <div class="card mb-4 post-card glass-card" id="post-{{ post.id }}">
+                <div class="card-body">
+                    <!-- Post Header -->
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="{{ url_for('static', filename=post.user.avatar) }}" 
+                             alt="Avatar" class="avatar-sm rounded-circle me-2">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 fw-bold">{{ post.user.name or post.user.username }}</h6>
+                            <small class="text-muted">@{{ post.user.username }} • {{ post.created_at.strftime('%b %d, %Y') }}</small>
+                        </div>
+                    </div>
+
+                    <!-- Post Content -->
+                    {% if post.content %}
+                    <p class="card-text mb-3">{{ post.content }}</p>
+                    {% endif %}
+
+                    <!-- Post Media -->
+                    {% if post.media_path %}
+                    <div class="post-media mb-3">
+                        {% if post.media_path.endswith(('.mp4', '.mov', '.webm')) %}
+                        <video src="{{ url_for('static', filename=post.media_path) }}" 
+                               class="img-fluid rounded" controls>
+                        </video>
+                        {% else %}
+                        <img src="{{ url_for('static', filename=post.media_path) }}" 
+                             class="img-fluid rounded" alt="Post media">
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Post Actions -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <button class="btn btn-sm btn-outline-danger like-btn" data-post="{{ post.id }}">
+                                <i class="fas fa-heart"></i> 
+                                <span class="like-count">{{ post.likes|length }}</span>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" 
+                                    data-bs-target="#comments-{{ post.id }}">
+                                <i class="fas fa-comment"></i> {{ post.comments|length }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Comments Section -->
+                    <div class="collapse mt-3" id="comments-{{ post.id }}">
+                        <div class="comments-section">
+                            {% for comment in post.comments %}
+                            <div class="d-flex mb-2">
+                                <img src="{{ url_for('static', filename=comment.user.avatar) }}" 
+                                     alt="Avatar" class="avatar-xs rounded-circle me-2">
+                                <div class="flex-grow-1">
+                                    <strong>{{ comment.user.username }}</strong>
+                                    <span class="ms-2">{{ comment.content }}</span>
+                                    <br>
+                                    <small class="text-muted">{{ comment.created_at.strftime('%b %d') }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            
+                            <!-- Add Comment Form -->
+                            {% if not is_guest %}
+                            <form method="POST" action="{{ url_for('comment_post', post_id=post.id) }}" class="mt-2">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <div class="input-group">
+                                    <input type="text" name="comment" class="form-control" placeholder="Write a comment...">
+                                    <button class="btn btn-primary" type="submit">Post</button>
+                                </div>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card text-center py-5 glass-card">
+                <div class="card-body">
+                    <div class="feature-icon mx-auto mb-3">
+                        <i class="fas fa-stream"></i>
+                    </div>
+                    <h5 class="text-gradient">No posts yet</h5>
+                    <p class="text-muted">
+                        {% if is_owner %}
+                        Share your first post with the community!
+                        {% else %}
+                        {{ user.username }} hasn't posted anything yet.
+                        {% endif %}
+                    </p>
+                    {% if is_owner %}
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Create First Post</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Services Tab -->
+        {% if user.profile_mode.value in ['teacher', 'both'] %}
+        <div class="tab-pane fade" id="services" role="tabpanel">
+            {% if user.services %}
+            <div class="row">
+                {% for service in user.services %}
+                {% if service.is_active %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 service-card glass-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title text-gradient">{{ service.title }}</h5>
+                                <span class="badge bg-{{ 'success' if service.price_type.value == 'free' else 'primary' }} glass-card">
+                                    {% if service.price_type.value == 'free' %}Free
+                                    {% elif service.price_type.value == 'hourly' %}${{ service.price_amount }}/hour
+                                    {% else %}${{ service.price_amount }} fixed
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <p class="card-text text-muted">{{ service.description }}</p>
+                            {% if service.duration %}
+                            <p class="small text-muted"><i class="fas fa-clock me-1"></i>{{ service.duration }}</p>
+                            {% endif %}
+                            {% if service.tags %}
+                            <div class="mt-3">
+                                {% for tag in service.tags.split(',') %}
+                                <span class="badge bg-light text-dark me-1 glass-card">{{ tag.strip() }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            {% if not is_guest and not is_owner %}
+                            <button class="btn btn-primary btn-sm contact-btn" data-user="{{ user.id }}" data-service="{{ service.title }}">
+                                <i class="fas fa-envelope me-1"></i>Contact
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="card text-center py-5 glass-card">
+                <div class="card-body">
+                    <div class="feature-icon mx-auto mb-3">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <h5 class="text-gradient">No services yet</h5>
+                    <p class="text-muted">
+                        {% if is_owner %}
+                        Start offering your skills and expertise as services.
+                        {% else %}
+                        {{ user.username }} hasn't added any services yet.
+                        {% endif %}
+                    </p>
+                    {% if is_owner %}
+                    <a href="{{ url_for('edit_profile') }}#services" class="btn btn-primary">Add Your First Service</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Learning Goals Tab -->
+        {% if user.profile_mode.value in ['learner', 'both'] %}
+        <div class="tab-pane fade" id="goals" role="tabpanel">
+            {% if user.learning_goals %}
+            <div class="row">
+                {% for goal in user.learning_goals %}
+                {% if goal.status == 'active' %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 goal-card glass-card">
+                        <div class="card-body">
+                            <h5 class="card-title text-gradient">{{ goal.title }}</h5>
+                            <p class="card-text text-muted">{{ goal.description }}</p>
+                            <div class="goal-meta">
+                                {% if goal.budget_min or goal.budget_max %}
+                                <p class="small text-muted mb-1">
+                                    <i class="fas fa-dollar-sign me-1"></i>
+                                    Budget: 
+                                    {% if goal.budget_min and goal.budget_max %}
+                                    ${{ goal.budget_min }} - ${{ goal.budget_max }}
+                                    {% elif goal.budget_min %}
+                                    From ${{ goal.budget_min }}
+                                    {% else %}
+                                    Up to ${{ goal.budget_max }}
+                                    {% endif %}
+                                </p>
+                                {% endif %}
+                                {% if goal.timeline %}
+                                <p class="small text-muted mb-1">
+                                    <i class="fas fa-calendar me-1"></i>Timeline: {{ goal.timeline }}
+                                </p>
+                                {% endif %}
+                                {% if goal.preferred_format %}
+                                <p class="small text-muted">
+                                    <i class="fas fa-users me-1"></i>Format: {{ goal.preferred_format }}
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            {% if not is_guest and not is_owner %}
+                            <button class="btn btn-success btn-sm offer-help-btn" data-user="{{ user.id }}" data-goal="{{ goal.title }}">
+                                <i class="fas fa-handshake me-1"></i>Offer Help
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="card text-center py-5 glass-card">
+                <div class="card-body">
+                    <div class="feature-icon mx-auto mb-3">
+                        <i class="fas fa-bullseye"></i>
+                    </div>
+                    <h5 class="text-gradient">No learning goals yet</h5>
+                    <p class="text-muted">
+                        {% if is_owner %}
+                        Share what you want to learn and find the right teachers.
+                        {% else %}
+                        {{ user.username }} hasn't added any learning goals yet.
+                        {% endif %}
+                    </p>
+                    {% if is_owner %}
+                    <a href="{{ url_for('edit_profile') }}#goals" class="btn btn-primary">Add Learning Goal</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Skills Tab -->
+        <div class="tab-pane fade" id="skills" role="tabpanel">
+            {% if user.skills %}
+            <div class="card glass-card">
+                <div class="card-body">
+                    <div class="row">
+                        {% for user_skill in user.skills %}
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex justify-content-between align-items-center glass-card p-3 rounded">
+                                <div>
+                                    <strong class="text-gradient">{{ user_skill.skill.name }}</strong>
+                                    <div class="progress mt-2" style="height: 8px; width: 200px;">
+                                        <div class="progress-bar 
+                                            {% if user_skill.proficiency == 'beginner' %}bg-info
+                                            {% elif user_skill.proficiency == 'intermediate' %}bg-primary
+                                            {% elif user_skill.proficiency == 'advanced' %}bg-warning
+                                            {% else %}bg-success{% endif %}" 
+                                            style="width: 
+                                            {% if user_skill.proficiency == 'beginner' %}25%
+                                            {% elif user_skill.proficiency == 'intermediate' %}50%
+                                            {% elif user_skill.proficiency == 'advanced' %}75%
+                                            {% else %}100%{% endif %}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted fw-bold">{{ user_skill.proficiency|title }}</small>
+                                    {% if user_skill.years_experience %}
+                                    <br>
+                                    <small class="text-muted">{{ user_skill.years_experience }} year{{ 's' if user_skill.years_experience > 1 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card text-center py-5 glass-card">
+                <div class="card-body">
+                    <div class="feature-icon mx-auto mb-3">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h5 class="text-gradient">No skills added yet</h5>
+                    <p class="text-muted">
+                        {% if is_owner %}
+                        Showcase your skills and expertise.
+                        {% else %}
+                        {{ user.username }} hasn't added any skills yet.
+                        {% endif %}
+                    </p>
+                    {% if is_owner %}
+                    <a href="{{ url_for('edit_profile') }}#skills" class="btn btn-primary">Add Skills</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Portfolio Tab -->
+        <div class="tab-pane fade" id="portfolio" role="tabpanel">
+            {% if user.portfolio_items %}
+            <div class="row">
+                {% for item in user.portfolio_items %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 glass-card">
+                        <div class="card-body">
+                            <h5 class="card-title text-gradient">{{ item.title }}</h5>
+                            {% if item.description %}
+                            <p class="card-text text-muted">{{ item.description }}</p>
+                            {% endif %}
+                            {% if item.media_path %}
+                            <div class="mb-3">
+                                <img src="{{ url_for('static', filename=item.media_path) }}" 
+                                     class="img-fluid rounded" alt="{{ item.title }}">
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            {% if item.project_url %}
+                            <a href="{{ item.project_url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-external-link-alt me-1"></i>View Project
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="card text-center py-5 glass-card">
+                <div class="card-body">
+                    <div class="feature-icon mx-auto mb-3">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <h5 class="text-gradient">No portfolio items yet</h5>
+                    <p class="text-muted">
+                        {% if is_owner %}
+                        Showcase your best work and projects.
+                        {% else %}
+                        {{ user.username }} hasn't added any portfolio items yet.
+                        {% endif %}
+                    </p>
+                    {% if is_owner %}
+                    <a href="{{ url_for('edit_profile') }}#portfolio" class="btn btn-primary">Add Portfolio Item</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Follow functionality
+    const followBtn = document.querySelector('.follow-btn');
+    if (followBtn) {
+        followBtn.addEventListener('click', async function() {
+            const userId = this.dataset.user;
+            const originalText = this.textContent;
+            
+            try {
+                const response = await fetch(`/user/${userId}/follow`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                
+                this.textContent = data.action === 'followed' ? 'Unfollow' : 'Follow';
+                // Update followers count
+                document.querySelector('div.d-flex.gap-4 div:nth-child(2) strong').textContent = data.followers_count;
+            } catch (error) {
+                console.error('Error:', error);
+                this.textContent = originalText;
+            }
+        });
+    }
+
+    // Connect functionality
+    const connectBtn = document.querySelector('.connect-btn');
+    if (connectBtn) {
+        connectBtn.addEventListener('click', async function() {
+            const userId = this.dataset.user;
+            
+            try {
+                const response = await fetch(`/user/${userId}/connect`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                
+                this.textContent = 'Request Sent';
+                this.classList.remove('btn-outline-primary');
+                this.classList.add('btn-secondary');
+                this.disabled = true;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    }
+
+    // Contact for service
+    document.querySelectorAll('.contact-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const userId = this.dataset.user;
+            const service = this.dataset.service;
+            window.location.href = `/messages?user=${userId}&subject=Service: ${service}`;
+        });
+    });
+
+    // Offer help for learning goal
+    document.querySelectorAll('.offer-help-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const userId = this.dataset.user;
+            const goal = this.dataset.goal;
+            window.location.href = `/messages?user=${userId}&subject=Learning Goal: ${goal}`;
+        });
+    });
+
+    // Message button
+    const messageBtn = document.querySelector('.message-btn');
+    if (messageBtn) {
+        messageBtn.addEventListener('click', function() {
+            const userId = this.dataset.user;
+            window.location.href = `/messages?user=${userId}`;
+        });
+    }
+
+    // Like functionality
+    document.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const postId = this.dataset.post;
+            const likeCount = this.querySelector('.like-count');
+            
+            try {
+                const response = await fetch(`/post/${postId}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                
+                likeCount.textContent = data.likes_count;
+                
+                if (data.action === 'liked') {
+                    this.classList.remove('btn-outline-danger');
+                    this.classList.add('btn-danger');
+                } else {
+                    this.classList.remove('btn-danger');
+                    this.classList.add('btn-outline-danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

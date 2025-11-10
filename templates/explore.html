@@ -1,0 +1,263 @@
+<!-- templates/explore.html - NEON PRO EDGE THEME -->
+{% extends "base.html" %}
+{% block title %}Explore - Discover Professionals & Opportunities{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto px-md-4 main-content">
+            <!-- Search Bar -->
+            <div class="card mb-4 glass-card">
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('explore') }}">
+                        <div class="input-group">
+                            <input type="text" name="q" class="form-control" 
+                                   placeholder="Search professionals, skills, companies..." value="{{ query }}">
+                            <select name="type" class="form-select" style="max-width: 150px;">
+                                <option value="all" {% if filter_type == 'all' %}selected{% endif %}>All</option>
+                                <option value="people" {% if filter_type == 'people' %}selected{% endif %}>People</option>
+                                <option value="posts" {% if filter_type == 'posts' %}selected{% endif %}>Posts</option>
+                            </select>
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search me-1"></i> Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if query %}
+            <!-- Search Results -->
+            <div class="row">
+                {% if filter_type in ['all', 'people'] and users %}
+                <div class="col-12 mb-4">
+                    <h5 class="text-gradient">People</h5>
+                    <div class="row">
+                        {% for user in users %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card glass-card">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ url_for('static', filename=user.avatar) }}" 
+                                             alt="Avatar" class="avatar-md rounded-circle me-3">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1 fw-bold">{{ user.name or user.username }}</h6>
+                                            <p class="text-muted mb-1">@{{ user.username }}</p>
+                                            {% if user.headline %}
+                                            <p class="small text-muted mb-2">{{ user.headline|truncate(50) }}</p>
+                                            {% endif %}
+                                            <div class="d-flex gap-2">
+                                                <a href="{{ url_for('profile', username=user.username) }}" 
+                                                   class="btn btn-outline-primary btn-sm">View Profile</a>
+                                                {% if user.id != current_user.id %}
+                                                <button class="btn btn-primary btn-sm follow-btn" data-user="{{ user.id }}">
+                                                    {% if current_user.is_following(user) %}Unfollow{% else %}Follow{% endif %}
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if filter_type in ['all', 'posts'] and posts %}
+                <div class="col-12">
+                    <h5 class="text-gradient">Posts</h5>
+                    {% for post in posts %}
+                    <div class="card mb-3 glass-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="{{ url_for('static', filename=post.user.avatar) }}" 
+                                     alt="Avatar" class="avatar-sm rounded-circle me-2">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0 fw-bold">{{ post.user.name or post.user.username }}</h6>
+                                    <small class="text-muted">@{{ post.user.username }} • {{ post.created_at.strftime('%b %d, %Y') }}</small>
+                                </div>
+                            </div>
+                            <p class="card-text">{{ post.content|truncate(200) }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="text-danger me-3">
+                                        <i class="fas fa-heart"></i> {{ post.like_count() }}
+                                    </span>
+                                    <span class="text-muted">
+                                        <i class="fas fa-comment"></i> {{ post.comment_count() }}
+                                    </span>
+                                </div>
+                                <a href="{{ url_for('dashboard') }}#post-{{ post.id }}" class="btn btn-outline-primary btn-sm">View Post</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            {% else %}
+            <!-- Trending Content -->
+            <div class="row">
+                <!-- Trending Professionals -->
+                <div class="col-md-6 mb-4">
+                    <div class="card glass-card">
+                        <div class="card-header">
+                            <h6 class="mb-0 text-gradient">Trending Professionals</h6>
+                        </div>
+                        <div class="card-body">
+                            {% for user in users %}
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="{{ url_for('static', filename=user.avatar) }}" 
+                                     alt="Avatar" class="avatar-sm rounded-circle me-3">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 fw-bold">{{ user.name or user.username }}</h6>
+                                    <p class="text-muted mb-1">@{{ user.username }}</p>
+                                    {% if user.headline %}
+                                    <p class="small text-muted">{{ user.headline|truncate(40) }}</p>
+                                    {% endif %}
+                                </div>
+                                <a href="{{ url_for('profile', username=user.username) }}" 
+                                   class="btn btn-outline-primary btn-sm">View</a>
+                            </div>
+                            {% if not loop.last %}<hr>{% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trending Skills -->
+                <div class="col-md-6 mb-4">
+                    <div class="card glass-card">
+                        <div class="card-header">
+                            <h6 class="mb-0 text-gradient">Popular Skills</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for skill in trending_skills %}
+                                <span class="badge bg-primary glass-card">{{ skill.name }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Posts -->
+                <div class="col-12">
+                    <div class="card glass-card">
+                        <div class="card-header">
+                            <h6 class="mb-0 text-gradient">Recent Posts</h6>
+                        </div>
+                        <div class="card-body">
+                            {% for post in posts %}
+                            <div class="mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                                <div class="d-flex align-items-center mb-2">
+                                    <img src="{{ url_for('static', filename=post.user.avatar) }}" 
+                                         alt="Avatar" class="avatar-sm rounded-circle me-2">
+                                    <div>
+                                        <h6 class="mb-0 fw-bold">{{ post.user.name or post.user.username }}</h6>
+                                        <small class="text-muted">{{ post.created_at.strftime('%b %d, %Y') }}</small>
+                                    </div>
+                                </div>
+                                <p class="mb-2">{{ post.content|truncate(150) }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="text-danger me-3">
+                                            <i class="fas fa-heart"></i> {{ post.like_count() }}
+                                        </span>
+                                        <span class="text-muted">
+                                            <i class="fas fa-comment"></i> {{ post.comment_count() }}
+                                        </span>
+                                    </div>
+                                    <a href="{{ url_for('dashboard') }}#post-{{ post.id }}" class="btn btn-outline-primary btn-sm">Read More</a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </main>
+
+        <!-- Right Sidebar -->
+        <div class="col-md-3 d-none d-md-block">
+            <div class="position-sticky pt-3">
+                <!-- Quick Stats -->
+                <div class="card mb-3 glass-card">
+                    <div class="card-body">
+                        <h6 class="text-gradient">Explore Opportunities</h6>
+                        <div class="d-grid gap-2">
+                            <a href="#" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-briefcase me-2"></i>Job Opportunities
+                            </a>
+                            <a href="#" class="btn btn-outline-success btn-sm">
+                                <i class="fas fa-laptop-code me-2"></i>Freelance Projects
+                            </a>
+                            <a href="#" class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-users me-2"></i>Collaborations
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trending Tags -->
+                <div class="card glass-card">
+                    <div class="card-header">
+                        <h6 class="mb-0 text-gradient">Trending Tags</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge bg-secondary glass-card">#programming</span>
+                            <span class="badge bg-secondary glass-card">#design</span>
+                            <span class="badge bg-secondary glass-card">#marketing</span>
+                            <span class="badge bg-secondary glass-card">#startup</span>
+                            <span class="badge bg-secondary glass-card">#remotework</span>
+                            <span class="badge bg-secondary glass-card">#career</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Follow functionality
+    document.querySelectorAll('.follow-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const userId = this.dataset.user;
+            const originalText = this.textContent;
+            
+            try {
+                const response = await fetch(`/user/${userId}/follow`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                
+                this.textContent = data.action === 'followed' ? 'Unfollow' : 'Follow';
+            } catch (error) {
+                console.error('Error:', error);
+                this.textContent = originalText;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,279 @@
+<!-- templates/landing.html - NEON PRO EDGE THEME -->
+{% extends "base.html" %}
+{% block title %}Professional Networking & Portfolio Platform{% endblock %}
+
+{% block content %}
+<!-- Guest Modal -->
+<div class="modal fade" id="guestModal" tabindex="-1" aria-labelledby="guestModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h5 class="modal-title" id="guestModalLabel">
+                    <i class="fas fa-eye me-2"></i>Browse as Guest
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-gradient">What you can do as a Guest:</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item glass-card mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Browse public profiles
+                            </li>
+                            <li class="list-group-item glass-card mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Explore professional content
+                            </li>
+                            <li class="list-group-item glass-card mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Search for professionals
+                            </li>
+                            <li class="list-group-item glass-card">
+                                <i class="fas fa-check text-success me-2"></i>
+                                View posts and portfolios
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-gradient">Guest Limitations:</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item glass-card mb-2">
+                                <i class="fas fa-times text-danger me-2"></i>
+                                Cannot create posts
+                            </li>
+                            <li class="list-group-item glass-card mb-2">
+                                <i class="fas fa-times text-danger me-2"></i>
+                                Cannot like or comment
+                            </li>
+                            <li class="list-group-item glass-card mb-2">
+                                <i class="fas fa-times text-danger me-2"></i>
+                                Cannot follow users
+                            </li>
+                            <li class="list-group-item glass-card">
+                                <i class="fas fa-times text-danger me-2"></i>
+                                Cannot send messages
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="alert alert-info mt-3 glass-alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Session expires in 24 hours</strong> - You can always create an account later!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a href="{{ url_for('browse_as_guest') }}" class="btn btn-primary">
+                    <i class="fas fa-eye me-2"></i>Continue as Guest
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hero Section -->
+<section class="hero-section text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <div class="d-flex align-items-center mb-4">
+                    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="SwapSavvy Pro" height="50" class="me-3">
+                    <h2 class="brand-text mb-0">SWAPSAVVY</h2>
+                </div>
+                <h1 class="display-4 fw-bold mb-4">Connect • Collaborate • Grow</h1>
+                <p class="lead mb-4">Empower your skills, swap your growth. Join thousands of professionals building their future on SwapSavvy Pro.</p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="{{ url_for('signup') }}" class="btn btn-light btn-lg">
+                        <i class="fas fa-user-plus me-2"></i>Get Started Free
+                    </a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </a>
+                    <button type="button" class="btn btn-outline-light btn-lg" data-bs-toggle="modal" data-bs-target="#guestModal">
+                        <i class="fas fa-eye me-2"></i>Browse as Guest
+                    </button>
+                </div>
+                <div class="mt-4">
+                    <small class="text-light opacity-75">Join 10K+ professionals already growing with us</small>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="position-relative">
+                    <div class="glass-card p-4">
+                        <img src="{{ url_for('static', filename='img/landing-hero.png') }}" alt="Professional Networking" class="img-fluid rounded">
+                    </div>
+                    <!-- Floating elements -->
+                    <div class="position-absolute top-0 start-0 mt-3 ms-3">
+                        <div class="glass-card p-3 small">
+                            <i class="fas fa-users text-primary me-2"></i>
+                            <span>Network</span>
+                        </div>
+                    </div>
+                    <div class="position-absolute top-0 end-0 mt-3 me-3">
+                        <div class="glass-card p-3 small">
+                            <i class="fas fa-briefcase text-success me-2"></i>
+                            <span>Opportunities</span>
+                        </div>
+                    </div>
+                    <div class="position-absolute bottom-0 start-0 mb-3 ms-3">
+                        <div class="glass-card p-3 small">
+                            <i class="fas fa-graduation-cap text-warning me-2"></i>
+                            <span>Learn</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col">
+                <h2 class="fw-bold text-gradient">Why Professionals Choose SwapSavvy?</h2>
+                <p class="text-muted">Everything you need to build your professional brand and grow your career</p>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 glass-card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <h5>Rich Professional Profiles</h5>
+                        <p class="text-muted">Showcase your experience, education, skills, and portfolio in one beautifully designed profile.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 glass-card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-network-wired"></i>
+                        </div>
+                        <h5>Smart Networking</h5>
+                        <p class="text-muted">Connect with professionals, join communities, and grow your network with intelligent matching.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 glass-card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <h5>Career Opportunities</h5>
+                        <p class="text-muted">Discover job opportunities, freelance work, and collaboration projects tailored to your skills.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 mb-4">
+                <div class="glass-card p-4">
+                    <h3 class="fw-bold text-gradient">10K+</h3>
+                    <p class="text-muted mb-0">Professionals</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="glass-card p-4">
+                    <h3 class="fw-bold text-gradient">5K+</h3>
+                    <p class="text-muted mb-0">Portfolios</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="glass-card p-4">
+                    <h3 class="fw-bold text-gradient">2K+</h3>
+                    <p class="text-muted mb-0">Opportunities</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="glass-card p-4">
+                    <h3 class="fw-bold text-gradient">50K+</h3>
+                    <p class="text-muted mb-0">Connections</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Guest Preview Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h2 class="fw-bold mb-4">Not Ready to Sign Up?</h2>
+                <p class="lead text-muted mb-4">Explore our platform as a guest and see what SwapSavvy Pro has to offer. No commitment required.</p>
+                <div class="d-flex gap-3">
+                    <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#guestModal">
+                        <i class="fas fa-eye me-2"></i>Browse as Guest
+                    </button>
+                    <a href="{{ url_for('explore') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-compass me-2"></i>Explore Public Content
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="glass-card p-4">
+                    <img src="{{ url_for('static', filename='img/guest-preview.png') }}" alt="Guest Preview" class="img-fluid rounded">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5" style="background: var(--gradient-dark);">
+    <div class="container">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center justify-content-center mb-4">
+                    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="SwapSavvy Pro" height="40" class="me-3">
+                    <h3 class="brand-text mb-0">SWAPSAVVY</h3>
+                </div>
+                <h2 class="fw-bold mb-3 text-white">Ready to Build Your Professional Future?</h2>
+                <p class="lead text-light mb-4">Join thousands of professionals who trust SwapSavvy Pro to showcase their skills and connect with opportunities.</p>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-user-plus me-2"></i>Create Your Profile
+                    </a>
+                    <button type="button" class="btn btn-outline-light btn-lg" data-bs-toggle="modal" data-bs-target="#guestModal">
+                        <i class="fas fa-eye me-2"></i>Browse First
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block styles %}
+<style>
+.hero-section {
+    background: var(--gradient-primary);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+}
+</style>
+{% endblock %}

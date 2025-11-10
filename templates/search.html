@@ -1,0 +1,106 @@
+<!-- templates/search.html - NEON PRO EDGE THEME -->
+{% extends "base.html" %}
+{% block title %}Search{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card glass-card">
+                <div class="card-header">
+                    <h4 class="mb-0 text-gradient">Search Professionals</h4>
+                </div>
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('search') }}">
+                        <div class="input-group mb-4">
+                            <input type="text" name="q" class="form-control" 
+                                   placeholder="Search by username, name, skills..." value="{{ query }}">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search me-1"></i> Search
+                            </button>
+                        </div>
+                    </form>
+
+                    {% if query %}
+                    <h5 class="text-gradient">Search Results for "{{ query }}"</h5>
+                    
+                    {% if users %}
+                    <div class="list-group">
+                        {% for user in users %}
+                        <div class="list-group-item glass-card mb-3 border-0">
+                            <div class="d-flex align-items-center">
+                                <img src="{{ url_for('static', filename=user.avatar) }}" 
+                                     alt="Avatar" class="avatar-md rounded-circle me-3">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 fw-bold">{{ user.name or user.username }}</h6>
+                                    <p class="text-muted mb-0">@{{ user.username }}</p>
+                                    {% if user.headline %}
+                                    <p class="text-muted small mb-1">{{ user.headline }}</p>
+                                    {% endif %}
+                                    <small class="text-muted">Member since {{ user.created_at.strftime('%b %Y') }}</small>
+                                </div>
+                                <div class="ms-3">
+                                    <a href="{{ url_for('profile', username=user.username) }}" 
+                                       class="btn btn-outline-primary btn-sm me-2">View Profile</a>
+                                    {% if user.id != current_user.id %}
+                                    <button class="btn btn-primary btn-sm follow-btn" data-user="{{ user.id }}">
+                                        {% if current_user.is_following(user) %}Unfollow{% else %}Follow{% endif %}
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <div class="feature-icon mx-auto mb-3">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h5 class="text-gradient">No users found</h5>
+                        <p class="text-muted">Try searching with different keywords.</p>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Follow functionality
+    document.querySelectorAll('.follow-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const userId = this.dataset.user;
+            const originalText = this.textContent;
+            
+            try {
+                const response = await fetch(`/user/${userId}/follow`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                
+                this.textContent = data.action === 'followed' ? 'Unfollow' : 'Follow';
+            } catch (error) {
+                console.error('Error:', error);
+                this.textContent = originalText;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
