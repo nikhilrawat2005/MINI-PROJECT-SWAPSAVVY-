@@ -1,4 +1,4 @@
-<!-- templates/notifications.html - NEON PRO EDGE THEME -->
+<!-- templates/notifications.html -->
 {% extends "base.html" %}
 {% block title %}Notifications{% endblock %}
 
@@ -9,29 +9,80 @@
             <div class="card glass-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="mb-0 text-gradient">Notifications</h4>
-                    <span class="badge bg-neon glass-card">{{ notifications|length }}</span>
+                    <div>
+                        <span class="badge bg-neon glass-card me-2">{{ notifications|length }}</span>
+                        <form method="POST" action="{{ url_for('mark_all_notifications_read') }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-check-double me-1"></i>Mark All Read
+                            </button>
+                        </form>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     {% if notifications %}
                     <div class="list-group list-group-flush">
                         {% for notification in notifications %}
                         <div class="list-group-item glass-card {% if not notification.is_read %}bg-light{% endif %} border-0">
-                            <div class="d-flex align-items-center">
-                                <img src="{{ url_for('static', filename=notification.actor.avatar) }}" 
+                            <div class="d-flex align-items-start">
+                                {% if notification.actor %}
+                                <img src="{{ url_for('static', filename=get_user_avatar(notification.actor)) }}" 
                                      alt="Avatar" class="avatar-sm rounded-circle me-3">
-                                <div class="flex-grow-1">
-                                    <strong>{{ notification.actor.username }}</strong> 
-                                    {{ notification.verb }} 
-                                    {% if notification.target_post_id %}
-                                    your post
-                                    {% endif %}
-                                    <br>
-                                    <small class="text-muted">{{ notification.created_at.strftime('%b %d, %Y at %H:%M') }}</small>
+                                {% else %}
+                                <div class="avatar-sm rounded-circle me-3 d-flex align-items-center justify-content-center bg-primary text-white">
+                                    <i class="fas fa-bell"></i>
                                 </div>
-                                {% if notification.target_post_id %}
-                                <a href="{{ url_for('dashboard') }}#post-{{ notification.target_post_id }}" 
-                                   class="btn btn-outline-primary btn-sm">View</a>
                                 {% endif %}
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            {% if notification.actor %}
+                                            <strong>{{ notification.actor.username }}</strong>
+                                            {% endif %}
+                                            <span class="ms-1">
+                                                {% if notification.verb == 'like' %}
+                                                liked your post
+                                                {% elif notification.verb == 'comment' %}
+                                                commented on your post
+                                                {% elif notification.verb == 'follow' %}
+                                                started following you
+                                                {% elif notification.verb == 'connection_request' %}
+                                                sent you a connection request
+                                                {% elif notification.verb == 'connection_accepted' %}
+                                                accepted your connection request
+                                                {% elif notification.verb == 'new_message' %}
+                                                sent you a message
+                                                {% elif notification.verb == 'review' %}
+                                                left you a review
+                                                {% else %}
+                                                {{ notification.verb }}
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <small class="text-muted me-2">
+                                                {{ notification.created_at.strftime('%b %d, %H:%M') }}
+                                            </small>
+                                            {% if not notification.is_read %}
+                                            <form method="POST" action="{{ url_for('mark_notification_read', notification_id=notification.id) }}" class="d-inline">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                <button type="submit" class="btn btn-outline-success btn-sm" title="Mark as read">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    {% if notification.target_post_id %}
+                                    <div class="mt-2 p-2 bg-dark bg-opacity-10 rounded">
+                                        <small class="text-muted">
+                                            <i class="fas fa-post me-1"></i>
+                                            View post
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
                         {% endfor %}
@@ -39,10 +90,10 @@
                     {% else %}
                     <div class="text-center py-5">
                         <div class="feature-icon mx-auto mb-3">
-                            <i class="fas fa-bell"></i>
+                            <i class="fas fa-bell-slash"></i>
                         </div>
-                        <h5 class="text-gradient">No notifications yet</h5>
-                        <p class="text-muted">When you get notifications, they'll appear here.</p>
+                        <h5 class="text-gradient">No notifications</h5>
+                        <p class="text-muted">You're all caught up! New notifications will appear here.</p>
                     </div>
                     {% endif %}
                 </div>

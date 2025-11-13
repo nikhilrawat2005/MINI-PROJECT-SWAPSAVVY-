@@ -1,4 +1,4 @@
-# run.py - UPDATED WITH ENHANCED IMAGE HANDLING
+# run.py - UPDATED WITH COMPLETE NETWORKING AND MESSAGING FEATURES
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -1426,30 +1426,59 @@ def messages():
     
     return render_template('messages.html', conversations=conversations)
 
+# Updated view_conversation route in run.py
 @app.route('/messages/<int:user_id>')
 @guest_protected
 @login_required
 def view_conversation(user_id):
-    """View conversation with specific user"""
-    current_user = User.query.get(session['user_id'])
+    """View conversation with specific user - can be accessed directly from profiles"""
+    current_user_obj = User.query.get(session['user_id'])
     other_user = User.query.get(user_id)
     
     if not other_user:
         flash('User not found', 'error')
         return redirect(url_for('messages'))
     
-    Message.query.filter_by(sender_id=user_id, receiver_id=current_user.id, is_read=False).update({'is_read': True})
+    # Mark messages as read when viewing conversation
+    Message.query.filter_by(sender_id=user_id, receiver_id=current_user_obj.id, is_read=False).update({'is_read': True})
     db.session.commit()
     
+    # Get all messages for this conversation
     messages = Message.query.filter(
-        ((Message.sender_id == current_user.id) & (Message.receiver_id == user_id)) |
-        ((Message.sender_id == user_id) & (Message.receiver_id == current_user.id))
+        ((Message.sender_id == current_user_obj.id) & (Message.receiver_id == user_id)) |
+        ((Message.sender_id == user_id) & (Message.receiver_id == current_user_obj.id))
     ).order_by(Message.created_at.asc()).all()
+    
+    # Get conversations list for the sidebar
+    sent_conversations = db.session.query(Message.receiver_id).filter_by(sender_id=current_user_obj.id).distinct()
+    received_conversations = db.session.query(Message.sender_id).filter_by(receiver_id=current_user_obj.id).distinct()
+    
+    all_conversation_ids = set([id for (id,) in sent_conversations] + [id for (id,) in received_conversations])
+    
+    conversations = []
+    for conv_user_id in all_conversation_ids:
+        conv_user = User.query.get(conv_user_id)
+        if conv_user:
+            last_message = Message.query.filter(
+                ((Message.sender_id == current_user_obj.id) & (Message.receiver_id == conv_user_id)) |
+                ((Message.sender_id == conv_user_id) & (Message.receiver_id == current_user_obj.id))
+            ).order_by(Message.created_at.desc()).first()
+            
+            unread_count = Message.query.filter_by(sender_id=conv_user_id, receiver_id=current_user_obj.id, is_read=False).count()
+            
+            conversations.append({
+                'user': conv_user,
+                'last_message': last_message,
+                'unread_count': unread_count
+            })
+    
+    conversations.sort(key=lambda x: x['last_message'].created_at if x['last_message'] else datetime.min, reverse=True)
     
     return render_template('conversation.html', 
                          messages=messages, 
                          other_user=other_user,
-                         current_user=current_user)
+                         current_user=current_user_obj,
+                         conversations=conversations)
 
 @app.route('/messages/send', methods=['POST'])
 @guest_protected

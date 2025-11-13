@@ -1,5 +1,6 @@
+<!-- Updated base.html with active navigation highlighting -->
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="light" class="theme-light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,27 +27,30 @@
     <meta name="description" content="SwapSavvy Pro - Connect, Collaborate, Grow. Professional skill sharing and networking platform">
     <meta name="keywords" content="professional networking, skills, learning, teaching, career growth">
     <meta name="author" content="SwapSavvy Pro">
+    
+    <!-- Theme Color for Mobile -->
+    <meta name="theme-color" content="#4B33FF">
 </head>
 
-<body>
+<body class="theme-light">
     <!-- Guest Banner -->
     {% if current_user and current_user.is_guest %}
-    <div class="alert alert-info alert-dismissible fade show mb-0 text-center" role="alert" style="background: linear-gradient(135deg, #4B33FF 0%, #FF4D94 100%); color: white;">
+    <div class="alert alert-info alert-dismissible fade show mb-0 text-center glass-alert" role="alert" style="background: linear-gradient(135deg, #4B33FF 0%, #FF4D94 100%); color: white;">
         <i class="fas fa-user-clock me-2"></i>
         You're browsing as Guest - <strong><a href="{{ url_for('upgrade_from_guest') }}" class="alert-link text-white">Create account</a></strong> to interact and access all features
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     {% endif %}
 
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-glass">
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-glass">
         <div class="container">
             <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">
                 <img src="{{ url_for('static', filename='img/logo.png') }}" alt="SwapSavvy Pro" height="35" class="me-2">
                 <span class="brand-text">SWAPSAVVY</span>
             </a>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -55,22 +59,22 @@
                 <!-- Logged-in User Navigation -->
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('dashboard') }}">
+                        <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
                             <i class="fas fa-home me-1"></i> Home
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('explore') }}">
+                        <a class="nav-link {% if request.endpoint == 'explore' %}active{% endif %}" href="{{ url_for('explore') }}">
                             <i class="fas fa-compass me-1"></i> Explore
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('connections') }}">
+                        <a class="nav-link {% if request.endpoint == 'connections' %}active{% endif %}" href="{{ url_for('connections') }}">
                             <i class="fas fa-users me-1"></i> Network
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('messages') }}">
+                        <a class="nav-link {% if request.endpoint in ['messages', 'view_conversation'] %}active{% endif %}" href="{{ url_for('messages') }}">
                             <i class="fas fa-envelope me-1"></i> Messages
                             {% if unread_messages_count > 0 %}
                             <span class="badge bg-neon ms-1">{{ unread_messages_count }}</span>
@@ -82,7 +86,7 @@
                 <div class="navbar-nav ms-auto">
                     <!-- Theme Toggle -->
                     <div class="nav-item me-3">
-                        <button class="btn theme-toggle" id="theme-toggle" title="Switch theme">
+                        <button class="btn theme-toggle" id="theme-toggle" title="Switch theme" aria-label="Switch theme">
                             <i class="fas fa-sun"></i>
                         </button>
                     </div>
@@ -90,21 +94,32 @@
                     <!-- Notifications -->
                     <div class="nav-item dropdown me-3">
                         <a class="nav-link position-relative" href="#" id="notificationsDropdown" role="button"
-                            data-bs-toggle="dropdown">
+                            data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
                             <i class="fas fa-bell"></i>
                             {% if unread_notifications_count > 0 %}
-                            <span
-                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-neon">
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-neon">
                                 {{ unread_notifications_count }}
                             </span>
                             {% endif %}
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end glass-dropdown">
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-card" aria-labelledby="notificationsDropdown">
                             <li>
                                 <h6 class="dropdown-header">Notifications</h6>
                             </li>
                             {% for notification in recent_notifications %}
-                            <li><a class="dropdown-item small" href="#">{{ notification.message }}</a></li>
+                            <li>
+                                <a class="dropdown-item small" href="#">
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ url_for('static', filename=get_user_avatar(notification.actor)) }}" 
+                                             alt="Avatar" class="avatar-xs rounded-circle me-2">
+                                        <div>
+                                            <strong>{{ notification.actor.username }}</strong> {{ notification.verb }}
+                                            <br>
+                                            <small class="text-muted">{{ notification.created_at.strftime('%b %d') }}</small>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
                             {% else %}
                             <li><span class="dropdown-item-text text-muted">No new notifications</span></li>
                             {% endfor %}
@@ -119,32 +134,26 @@
                     <!-- User Menu -->
                     <div class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown"
-                            role="button" data-bs-toggle="dropdown">
+                            role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="User menu">
                             <img src="{{ url_for('static', filename=get_user_avatar(current_user)) }}" alt="Avatar"
                                 class="avatar-sm rounded-circle me-2">
                             {{ current_user.username }}
                             {% if current_user.verified_badge %}
-                            <i class="fas fa-check-circle text-success ms-1" title="Verified"></i>
+                            <i class="fas fa-check-circle text-success ms-1" title="Verified" aria-label="Verified"></i>
                             {% endif %}
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end glass-dropdown">
-                            <li><span class="dropdown-item-text small text-muted">ID: {{ current_user.assigned_id
-                                    }}</span></li>
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-card" aria-labelledby="navbarDropdown">
+                            <li><span class="dropdown-item-text small text-muted">ID: {{ current_user.assigned_id }}</span></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
-                            <li><a class="dropdown-item" href="{{ url_for('dashboard') }}"><i
-                                        class="fas fa-home me-2"></i>Dashboard</a></li>
-                            <li><a class="dropdown-item"
-                                    href="{{ url_for('profile', username=current_user.username) }}"><i
-                                        class="fas fa-user me-2"></i>Profile</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('edit_profile') }}"><i
-                                        class="fas fa-cog me-2"></i>Edit Profile</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('dashboard') }}"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('profile', username=current_user.username) }}"><i class="fas fa-user me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('edit_profile') }}"><i class="fas fa-cog me-2"></i>Edit Profile</a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
-                            <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i
-                                        class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                         </ul>
                     </div>
                 </div>
@@ -153,12 +162,12 @@
                 <!-- Guest User Navigation -->
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('explore') }}">
+                        <a class="nav-link {% if request.endpoint == 'explore' %}active{% endif %}" href="{{ url_for('explore') }}">
                             <i class="fas fa-compass me-1"></i> Explore
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('search') }}">
+                        <a class="nav-link {% if request.endpoint == 'search' %}active{% endif %}" href="{{ url_for('search') }}">
                             <i class="fas fa-search me-1"></i> Search
                         </a>
                     </li>
@@ -167,32 +176,29 @@
                 <div class="navbar-nav ms-auto">
                     <!-- Theme Toggle -->
                     <div class="nav-item me-3">
-                        <button class="btn theme-toggle" id="theme-toggle" title="Switch theme">
+                        <button class="btn theme-toggle" id="theme-toggle" title="Switch theme" aria-label="Switch theme">
                             <i class="fas fa-sun"></i>
                         </button>
                     </div>
 
                     <div class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown"
-                            role="button" data-bs-toggle="dropdown">
+                            role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Guest menu">
                             <img src="{{ url_for('static', filename=get_user_avatar(current_user)) }}" alt="Avatar"
                                 class="avatar-sm rounded-circle me-2">
                             Guest User
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end glass-dropdown">
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-card" aria-labelledby="navbarDropdown">
                             <li><span class="dropdown-item-text small text-muted">Guest Session</span></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
-                            <li><a class="dropdown-item" href="{{ url_for('upgrade_from_guest') }}"><i
-                                        class="fas fa-user-plus me-2"></i>Create Account</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('login') }}"><i
-                                        class="fas fa-sign-in-alt me-2"></i>Login</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('upgrade_from_guest') }}"><i class="fas fa-user-plus me-2"></i>Create Account</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt me-2"></i>Login</a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
-                            <li><a class="dropdown-item" href="{{ url_for('end_guest_session') }}"><i
-                                        class="fas fa-sign-out-alt me-2"></i>End Session</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('end_guest_session') }}"><i class="fas fa-sign-out-alt me-2"></i>End Session</a></li>
                         </ul>
                     </div>
                 </div>
@@ -202,13 +208,13 @@
                 <div class="navbar-nav ms-auto">
                     <!-- Theme Toggle -->
                     <div class="nav-item me-3">
-                        <button class="btn theme-toggle" id="theme-toggle" title="Switch theme">
+                        <button class="btn theme-toggle" id="theme-toggle" title="Switch theme" aria-label="Switch theme">
                             <i class="fas fa-sun"></i>
                         </button>
                     </div>
 
-                    <a class="nav-link" href="{{ url_for('login') }}">Login</a>
-                    <a class="nav-link" href="{{ url_for('signup') }}">Sign Up</a>
+                    <a class="nav-link {% if request.endpoint == 'login' %}active{% endif %}" href="{{ url_for('login') }}">Login</a>
+                    <a class="nav-link {% if request.endpoint == 'signup' %}active{% endif %}" href="{{ url_for('signup') }}">Sign Up</a>
                     <a href="{{ url_for('guest_mode') }}" class="nav-link btn-guest">
                         <i class="fas fa-user-clock me-1"></i>Try as Guest
                     </a>
@@ -226,7 +232,7 @@
         <div class="alert alert-{{ category }} alert-dismissible fade show m-3 rounded fade-in glass-alert">
             <div class="container">
                 {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         </div>
         {% endfor %}
@@ -266,6 +272,21 @@
     <!-- CSRF Token for AJAX requests -->
     <script>
         const CSRF_TOKEN = "{{ csrf_token() }}";
+        
+        // Initialize theme-specific enhancements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add theme class to body for additional CSS control
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            document.body.className = `theme-${currentTheme} theme-loaded`;
+            
+            // Enhance all text elements for better visibility
+            const textElements = document.querySelectorAll('p, span, div, li, h1, h2, h3, h4, h5, h6');
+            textElements.forEach(el => {
+                if (!el.classList.contains('theme-text-enhanced')) {
+                    el.classList.add('theme-text-enhanced');
+                }
+            });
+        });
     </script>
 
     {% block scripts %}{% endblock %}

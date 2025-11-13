@@ -1,0 +1,152 @@
+<!-- templates/conversation.html -->
+{% extends "base.html" %}
+{% block title %}Conversation with {{ other_user.username }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card glass-card">
+                <div class="card-header d-flex align-items-center">
+                    <a href="{{ url_for('messages') }}" class="btn btn-outline-secondary btn-sm me-3">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <img src="{{ url_for('static', filename=get_user_avatar(other_user)) }}" 
+                         alt="Avatar" class="avatar-sm rounded-circle me-2">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-0 fw-bold">{{ other_user.name or other_user.username }}</h6>
+                        <small class="text-muted">@{{ other_user.username }}</small>
+                    </div>
+                    <a href="{{ url_for('profile', username=other_user.username) }}" 
+                       class="btn btn-outline-primary btn-sm">View Profile</a>
+                </div>
+                
+                <!-- Messages Container -->
+                <div class="card-body messages-container" style="height: 60vh; overflow-y: auto;">
+                    {% for message in messages %}
+                    <div class="message mb-3 {% if message.sender_id == current_user.id %}text-end{% endif %}">
+                        <div class="d-flex {% if message.sender_id == current_user.id %}justify-content-end{% endif %}">
+                            {% if message.sender_id != current_user.id %}
+                            <img src="{{ url_for('static', filename=get_user_avatar(message.sender)) }}" 
+                                 alt="Avatar" class="avatar-xs rounded-circle me-2">
+                            {% endif %}
+                            <div class="message-bubble {% if message.sender_id == current_user.id %}bg-primary text-white{% else %}glass-card{% endif %} p-3 rounded">
+                                <p class="mb-1">{{ message.content }}</p>
+                                <small class="{% if message.sender_id == current_user.id %}text-white-50{% else %}text-muted{% endif %}">
+                                    {{ message.created_at.strftime('%I:%M %p') }}
+                                </small>
+                            </div>
+                            {% if message.sender_id == current_user.id %}
+                            <img src="{{ url_for('static', filename=get_user_avatar(message.sender)) }}" 
+                                 alt="Avatar" class="avatar-xs rounded-circle ms-2">
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="feature-icon mx-auto mb-3">
+                            <i class="fas fa-comment"></i>
+                        </div>
+                        <h6 class="text-gradient">No messages yet</h6>
+                        <p class="text-muted">Send a message to start the conversation</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Message Input -->
+                <div class="card-footer">
+                    <form id="message-form" class="d-flex gap-2">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <input type="hidden" name="receiver_id" value="{{ other_user.id }}"/>
+                        <div class="flex-grow-1">
+                            <input type="text" name="content" class="form-control" placeholder="Type your message..." required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const messagesContainer = document.querySelector('.messages-container');
+    const messageForm = document.getElementById('message-form');
+    const messageInput = messageForm.querySelector('input[name="content"]');
+
+    // Scroll to bottom of messages
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    // Send message
+    messageForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const content = messageInput.value.trim();
+        if (!content) return;
+
+        const formData = new FormData(this);
+        
+        try {
+            const response = await fetch('/messages/send', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrf_token')
+                }
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                // Add message to UI immediately
+                const messageHTML = `
+                    <div class="message mb-3 text-end">
+                        <div class="d-flex justify-content-end">
+                            <div class="message-bubble bg-primary text-white p-3 rounded">
+                                <p class="mb-1">${content}</p>
+                                <small class="text-white-50">Just now</small>
+                            </div>
+                            <img src="{{ url_for('static', filename=get_user_avatar(current_user)) }}" 
+                                 alt="Avatar" class="avatar-xs rounded-circle ms-2">
+                        </div>
+                    </div>
+                `;
+                
+                const noMessagesElement = messagesContainer.querySelector('.text-center');
+                if (noMessagesElement) {
+                    noMessagesElement.remove();
+                }
+                
+                messagesContainer.insertAdjacentHTML('beforeend', messageHTML);
+                messageInput.value = '';
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            } else {
+                alert('Failed to send message: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+            alert('Error sending message');
+        }
+    });
+
+    // Auto-focus message input
+    messageInput.focus();
+});
+</script>
+
+<style>
+.message-bubble {
+    max-width: 70%;
+    word-wrap: break-word;
+}
+
+.messages-container {
+    scroll-behavior: smooth;
+}
+</style>
+{% endblock %}

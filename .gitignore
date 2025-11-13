@@ -1,26 +1,35 @@
-.env
-instance/
+# Python
 __pycache__/
-*.pyc
-uploads/
-.vscode/
-*.log
-.DS_Store
-*.sqlite
-*.db
-.env.local
-.env.production
-.coverage
-htmlcov/
-.pytest_cache/
-migrations/versions/*.py
-!migrations/versions/.gitkeep
-temp/
-static/uploads/
+*.py[cod]
+*$py.class
+
+# Virtualenv
 venv/
-.env/
+env/
+.venv/
+
+# Env files / secrets
+.env
+.env.*
+
+# Packaging
 *.egg-info/
 dist/
 build/
-.cache
-.mypy_cache/
+
+# IDEs & OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Database files
+*.sqlite3
+*.db
+
+# Pytest
+.pytest_cache/
+
+# Logs
+*.log

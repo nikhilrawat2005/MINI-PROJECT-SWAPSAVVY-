@@ -1,0 +1,267 @@
+<!-- templates/manage_education.html -->
+{% extends "base.html" %}
+{% block title %}Manage Education{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card glass-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0 text-gradient">Manage Education</h4>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEducationModal">
+                        <i class="fas fa-plus me-1"></i>Add Education
+                    </button>
+                </div>
+                <div class="card-body">
+                    {% if educations %}
+                    <div class="list-group list-group-flush">
+                        {% for edu in educations %}
+                        <div class="list-group-item glass-card border-0 mb-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h5 class="mb-1">{{ edu.school }}</h5>
+                                    {% if edu.degree %}
+                                    <h6 class="text-primary mb-2">{{ edu.degree }}</h6>
+                                    {% endif %}
+                                    {% if edu.field_of_study %}
+                                    <p class="text-muted mb-2">{{ edu.field_of_study }}</p>
+                                    {% endif %}
+                                    <div class="d-flex text-muted mb-2">
+                                        <span>
+                                            <i class="fas fa-calendar me-1"></i>
+                                            {% if edu.start_date %}
+                                                {{ edu.start_date.strftime('%b %Y') }} - 
+                                                {% if edu.current %}
+                                                Present
+                                                {% else %}
+                                                {{ edu.end_date.strftime('%b %Y') if edu.end_date else 'Not specified' }}
+                                                {% endif %}
+                                            {% else %}
+                                                Dates not specified
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    {% if edu.description %}
+                                    <p class="mb-2">{{ edu.description }}</p>
+                                    {% endif %}
+                                </div>
+                                <div class="d-flex gap-2 ms-3">
+                                    <button class="btn btn-outline-secondary btn-sm edit-education" 
+                                            data-id="{{ edu.id }}"
+                                            data-school="{{ edu.school }}"
+                                            data-degree="{{ edu.degree or '' }}"
+                                            data-field="{{ edu.field_of_study or '' }}"
+                                            data-start-date="{{ edu.start_date.strftime('%Y-%m-%d') if edu.start_date else '' }}"
+                                            data-end-date="{{ edu.end_date.strftime('%Y-%m-%d') if edu.end_date else '' }}"
+                                            data-current="{{ 'true' if edu.current else 'false' }}"
+                                            data-description="{{ edu.description or '' }}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <form method="POST" action="{{ url_for('delete_education', edu_id=edu.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                                onclick="return confirm('Are you sure you want to delete this education?')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="feature-icon mx-auto mb-3">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <h5 class="text-gradient">No education added yet</h5>
+                        <p class="text-muted">Add your educational background to showcase your qualifications</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEducationModal">
+                            <i class="fas fa-plus me-1"></i>Add Your First Education
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Education Modal -->
+<div class="modal fade" id="addEducationModal" tabindex="-1" aria-labelledby="addEducationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addEducationModalLabel">Add Education</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('add_education') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="school" class="form-label">School *</label>
+                        <input type="text" class="form-control" id="school" name="school" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="degree" class="form-label">Degree</label>
+                        <input type="text" class="form-control" id="degree" name="degree">
+                    </div>
+                    <div class="mb-3">
+                        <label for="field_of_study" class="form-label">Field of Study</label>
+                        <input type="text" class="form-control" id="field_of_study" name="field_of_study">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="start_date" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="end_date" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="current" name="current">
+                            <label class="form-check-label" for="current">
+                                I currently study here
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Education</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Education Modal -->
+<div class="modal fade" id="editEducationModal" tabindex="-1" aria-labelledby="editEducationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editEducationModalLabel">Edit Education</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editEducationForm" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_school" class="form-label">School *</label>
+                        <input type="text" class="form-control" id="edit_school" name="school" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_degree" class="form-label">Degree</label>
+                        <input type="text" class="form-control" id="edit_degree" name="degree">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_field_of_study" class="form-label">Field of Study</label>
+                        <input type="text" class="form-control" id="edit_field_of_study" name="field_of_study">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_start_date" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="edit_start_date" name="start_date">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_end_date" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="edit_end_date" name="end_date">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="edit_current" name="current">
+                            <label class="form-check-label" for="edit_current">
+                                I currently study here
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="edit_description" name="description" rows="4"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Education</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Edit education
+    document.querySelectorAll('.edit-education').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const eduId = this.dataset.id;
+            const school = this.dataset.school;
+            const degree = this.dataset.degree;
+            const field = this.dataset.field;
+            const startDate = this.dataset.startDate;
+            const endDate = this.dataset.endDate;
+            const current = this.dataset.current === 'true';
+            const description = this.dataset.description;
+            
+            document.getElementById('edit_school').value = school;
+            document.getElementById('edit_degree').value = degree;
+            document.getElementById('edit_field_of_study').value = field;
+            document.getElementById('edit_start_date').value = startDate;
+            document.getElementById('edit_end_date').value = endDate;
+            document.getElementById('edit_current').checked = current;
+            document.getElementById('edit_description').value = description;
+            
+            const form = document.getElementById('editEducationForm');
+            form.action = `/education/${eduId}/edit`;
+            
+            const modal = new bootstrap.Modal(document.getElementById('editEducationModal'));
+            modal.show();
+        });
+    });
+
+    // Handle current study checkbox
+    const currentCheckbox = document.getElementById('current');
+    const endDateInput = document.getElementById('end_date');
+    
+    if (currentCheckbox && endDateInput) {
+        currentCheckbox.addEventListener('change', function() {
+            endDateInput.disabled = this.checked;
+            if (this.checked) {
+                endDateInput.value = '';
+            }
+        });
+    }
+
+    const editCurrentCheckbox = document.getElementById('edit_current');
+    const editEndDateInput = document.getElementById('edit_end_date');
+    
+    if (editCurrentCheckbox && editEndDateInput) {
+        editCurrentCheckbox.addEventListener('change', function() {
+            editEndDateInput.disabled = this.checked;
+            if (this.checked) {
+                editEndDateInput.value = '';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

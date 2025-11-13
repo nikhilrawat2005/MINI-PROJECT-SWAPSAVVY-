@@ -1,0 +1,372 @@
+<!-- templates/conversation.html - UPDATED FOR DIRECT MESSAGING -->
+{% extends "base.html" %}
+{% block title %}Conversation with {{ other_user.username }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Conversations List -->
+        <div class="col-md-4 border-end">
+            <div class="card glass-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0 text-gradient">Messages</h4>
+                    <span class="badge bg-neon glass-card">{{ conversations|length }}</span>
+                </div>
+                <div class="card-body p-0">
+                    {% if conversations %}
+                    <div class="list-group list-group-flush">
+                        {% for conversation in conversations %}
+                        <a href="{{ url_for('view_conversation', user_id=conversation.user.id) }}" 
+                           class="list-group-item list-group-item-action glass-card border-0 {% if other_user and other_user.id == conversation.user.id %}active{% endif %}">
+                            <div class="d-flex align-items-center">
+                                <div class="position-relative">
+                                    <img src="{{ url_for('static', filename=get_user_avatar(conversation.user)) }}" 
+                                         alt="Avatar" class="avatar-md rounded-circle me-3">
+                                    {% if conversation.unread_count > 0 %}
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                        {{ conversation.unread_count }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <h6 class="mb-1 fw-bold">{{ conversation.user.name or conversation.user.username }}</h6>
+                                        <small class="text-muted">
+                                            {{ conversation.last_message.created_at.strftime('%b %d') if conversation.last_message else '' }}
+                                        </small>
+                                    </div>
+                                    <p class="mb-1 text-muted">
+                                        {% if conversation.last_message %}
+                                            {% if conversation.last_message.sender_id == current_user.id %}
+                                                You: {{ conversation.last_message.content|truncate(30) }}
+                                            {% else %}
+                                                {{ conversation.last_message.content|truncate(30) }}
+                                            {% endif %}
+                                        {% else %}
+                                            No messages yet
+                                        {% endif %}
+                                    </p>
+                                    <small class="text-muted">@{{ conversation.user.username }}</small>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="feature-icon mx-auto mb-3">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <h5 class="text-gradient">No conversations yet</h5>
+                        <p class="text-muted">Start a conversation with other professionals</p>
+                        <a href="{{ url_for('explore') }}" class="btn btn-primary">Find People to Message</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Conversation -->
+        <div class="col-md-8">
+            <div class="card glass-card h-100 d-flex flex-column">
+                <div class="card-header d-flex align-items-center">
+                    <a href="{{ url_for('messages') }}" class="btn btn-outline-secondary btn-sm me-3 d-md-none">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <img src="{{ url_for('static', filename=get_user_avatar(other_user)) }}" 
+                         alt="Avatar" class="avatar-sm rounded-circle me-2">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-0 fw-bold">{{ other_user.name or other_user.username }}</h6>
+                        <small class="text-muted">@{{ other_user.username }}</small>
+                    </div>
+                    <a href="{{ url_for('profile', username=other_user.username) }}" 
+                       class="btn btn-outline-primary btn-sm">View Profile</a>
+                </div>
+                
+                <!-- Messages Container -->
+                <div class="card-body messages-container flex-grow-1" style="overflow-y: auto; max-height: 60vh;">
+                    {% for message in messages %}
+                    <div class="message mb-3 {% if message.sender_id == current_user.id %}text-end{% endif %}">
+                        <div class="d-flex {% if message.sender_id == current_user.id %}justify-content-end{% endif %}">
+                            {% if message.sender_id != current_user.id %}
+                            <img src="{{ url_for('static', filename=get_user_avatar(message.sender)) }}" 
+                                 alt="Avatar" class="avatar-xs rounded-circle me-2">
+                            {% endif %}
+                            <div class="message-bubble {% if message.sender_id == current_user.id %}bg-primary text-white{% else %}glass-card{% endif %} p-3 rounded">
+                                <p class="mb-1">{{ message.content }}</p>
+                                <small class="{% if message.sender_id == current_user.id %}text-white-50{% else %}text-muted{% endif %}">
+                                    {{ message.created_at.strftime('%I:%M %p') }}
+                                </small>
+                            </div>
+                            {% if message.sender_id == current_user.id %}
+                            <img src="{{ url_for('static', filename=get_user_avatar(message.sender)) }}" 
+                                 alt="Avatar" class="avatar-xs rounded-circle ms-2">
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="feature-icon mx-auto mb-3">
+                            <i class="fas fa-comment"></i>
+                        </div>
+                        <h6 class="text-gradient">No messages yet</h6>
+                        <p class="text-muted">Send a message to start the conversation</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Message Input -->
+                <div class="card-footer">
+                    <form id="message-form" class="d-flex gap-2">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <input type="hidden" name="receiver_id" value="{{ other_user.id }}"/>
+                        <div class="flex-grow-1">
+                            <input type="text" name="content" class="form-control" placeholder="Type your message..." required id="message-input">
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const messagesContainer = document.querySelector('.messages-container');
+    const messageForm = document.getElementById('message-form');
+    const messageInput = document.getElementById('message-input');
+
+    // Scroll to bottom of messages
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    // Send message
+    messageForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const content = messageInput.value.trim();
+        if (!content) return;
+
+        const formData = new FormData(this);
+        
+        try {
+            const response = await fetch('/messages/send', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrf_token')
+                }
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                // Add message to UI immediately
+                const messageHTML = `
+                    <div class="message mb-3 text-end">
+                        <div class="d-flex justify-content-end">
+                            <div class="message-bubble bg-primary text-white p-3 rounded">
+                                <p class="mb-1">${content}</p>
+                                <small class="text-white-50">Just now</small>
+                            </div>
+                            <img src="{{ url_for('static', filename=get_user_avatar(current_user)) }}" 
+                                 alt="Avatar" class="avatar-xs rounded-circle ms-2">
+                        </div>
+                    </div>
+                `;
+                
+                const noMessagesElement = messagesContainer.querySelector('.text-center');
+                if (noMessagesElement) {
+                    noMessagesElement.remove();
+                }
+                
+                messagesContainer.insertAdjacentHTML('beforeend', messageHTML);
+                messageInput.value = '';
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                
+                // Update the conversation list to show this new message
+                updateConversationList();
+            } else {
+                alert('Failed to send message: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+            alert('Error sending message');
+        }
+    });
+
+    // Auto-focus message input
+    messageInput.focus();
+    
+    // Function to update conversation list (simplified - in real app would use WebSockets)
+    function updateConversationList() {
+        // This would typically be handled by WebSockets in a production app
+        // For now, we'll just reload the conversations list after a short delay
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+    }
+    
+    // Auto-refresh messages every 10 seconds
+    setInterval(() => {
+        if (document.visibilityState === 'visible') {
+            window.location.reload();
+        }
+    }, 10000);
+});
+</script>
+
+<style>
+.message-bubble {
+    max-width: 70%;
+    word-wrap: break-word;
+}
+
+.messages-container {
+    scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+.messages-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 3px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .col-md-4.border-end {
+        border-right: none !important;
+        margin-bottom: 1rem;
+    }
+    
+    .message-bubble {
+        max-width: 85%;
+    }
+}
+</style>
+{% endblock %}<!-- templates/connections.html - UPDATED MESSAGE BUTTONS -->
+{% extends "base.html" %}
+{% block title %}Network - Connections{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card glass-card">
+                <div class="card-header">
+                    <h4 class="mb-0 text-gradient">Your Network</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Pending Connection Requests -->
+                    <div class="mb-5">
+                        <h5 class="text-gradient mb-3">Pending Connection Requests</h5>
+                        {% if pending_users %}
+                            {% for pending in pending_users %}
+                            <div class="card glass-card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ url_for('static', filename=get_user_avatar(pending.user)) }}" 
+                                             alt="Avatar" class="avatar-md rounded-circle me-3">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1 fw-bold">{{ pending.user.name or pending.user.username }}</h6>
+                                            <p class="text-muted mb-1">@{{ pending.user.username }}</p>
+                                            {% if pending.user.headline %}
+                                            <p class="small text-muted mb-2">{{ pending.user.headline }}</p>
+                                            {% endif %}
+                                            <small class="text-muted">
+                                                {% if pending.is_sent_by_me %}
+                                                    Sent {{ pending.connection.created_at.strftime('%b %d') }}
+                                                {% else %}
+                                                    Received {{ pending.connection.created_at.strftime('%b %d') }}
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            {% if not pending.is_sent_by_me %}
+                                            <form method="POST" action="{{ url_for('accept_connection', conn_id=pending.connection.id) }}" class="d-inline">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                <button type="submit" class="btn btn-success btn-sm">
+                                                    <i class="fas fa-check me-1"></i>Accept
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{{ url_for('reject_connection', conn_id=pending.connection.id) }}" class="d-inline">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                    <i class="fas fa-times me-1"></i>Ignore
+                                                </button>
+                                            </form>
+                                            {% else %}
+                                            <span class="badge bg-secondary">Pending</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4">
+                                <div class="feature-icon mx-auto mb-3">
+                                    <i class="fas fa-user-clock"></i>
+                                </div>
+                                <h6 class="text-gradient">No pending requests</h6>
+                                <p class="text-muted">Connection requests will appear here</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Your Connections -->
+                    <div>
+                        <h5 class="text-gradient mb-3">Your Connections ({{ accepted_users|length }})</h5>
+                        {% if accepted_users %}
+                            <div class="row">
+                                {% for user in accepted_users %}
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="card glass-card h-100">
+                                        <div class="card-body text-center">
+                                            <img src="{{ url_for('static', filename=get_user_avatar(user)) }}" 
+                                                 alt="Avatar" class="avatar-lg rounded-circle mb-3">
+                                            <h6 class="fw-bold mb-1">{{ user.name or user.username }}</h6>
+                                            <p class="text-muted mb-2">@{{ user.username }}</p>
+                                            {% if user.headline %}
+                                            <p class="small text-muted mb-3">{{ user.headline|truncate(50) }}</p>
+                                            {% endif %}
+                                            <div class="d-flex justify-content-center gap-2">
+                                                <a href="{{ url_for('profile', username=user.username) }}" 
+                                                   class="btn btn-outline-primary btn-sm">View Profile</a>
+                                                <a href="{{ url_for('view_conversation', user_id=user.id) }}" 
+                                                   class="btn btn-primary btn-sm">Message</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <div class="feature-icon mx-auto mb-3">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <h6 class="text-gradient">No connections yet</h6>
+                                <p class="text-muted">Start connecting with other professionals</p>
+                                <a href="{{ url_for('explore') }}" class="btn btn-primary">Find People</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
